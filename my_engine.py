@@ -24,7 +24,7 @@ def calc(car: car_sprite.Car):
     # car.velocity[0] += absolute_vel_change_vec[0]
     steering_angle = car.steerwheel_turn_extent.counter
 
-    car.rotation_speed = steering_angle
+    car.rotation_speed = steering_angle * lin_to_regulated(car.gas_or_brake_pedal_extent.counter, coef=0.1, max_amplitude=0.5)
 
     apply_speeds(car)
 
@@ -32,13 +32,17 @@ def calc(car: car_sprite.Car):
 def apply_speeds(car: car_sprite):
     car.rotation += car.rotation_speed
     # car.rotation = car.rotation % (2*math.pi)
-    delta_x_vec = utils.rotate_vector(np.array([-1*root_on_whole_domain(car.rotation_speed) * car.gas_or_brake_pedal_extent.counter, 10*root_on_whole_domain(-car.gas_or_brake_pedal_extent.counter)]), car.rotation)
+    side_traction_loss = car.rotation_speed / math.pi
+    side_vel = -10 * side_traction_loss * car.gas_or_brake_pedal_extent.counter
+    forward_vel = 10 * (1 - side_traction_loss) * lin_to_regulated(-car.gas_or_brake_pedal_extent.counter, coef=0.4, degree=1, max_amplitude=2)
+    absolute_x_vec = np.array([side_vel, forward_vel])
+    # absolute_x_vec = np.array([-20 * lin_to_regulated(car.rotation_speed, degree=4) * car.gas_or_brake_pedal_extent.counter,
+    #                            10 * lin_to_regulated(-car.gas_or_brake_pedal_extent.counter, degree=2, max_amplitude=2)])
+    delta_x_vec = utils.rotate_vector(absolute_x_vec, car.rotation)
     car.location += delta_x_vec
-    delta_x_vec[1] = -delta_x_vec[1]
-    # car.image = pygame.transform.rotate(car.image, car.rotation_speed)
-    # car.rect = car.image.get_rect()
-    car.rect.center = car.location
+    # delta_x_vec[1] = -delta_x_vec[1]
+    # car.rect.center = car.location
 
 
-def root_on_whole_domain(x, degree=5):
-    return np.sign(x) * math.pow(abs(x), 1/degree)
+def lin_to_regulated(x, coef=3, degree=3, max_amplitude=1.3) -> int:
+    return np.clip(coef*x**degree, -max_amplitude, max_amplitude)

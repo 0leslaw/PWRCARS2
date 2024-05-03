@@ -25,7 +25,7 @@ class Counter:
     def get_state(self):
         return self.state
 
-    def two_side_scale_update(self):
+    def two_side_scale_update(self, tilt_reduction_reaction=0):
         if self.state == "S":
             inc = math.copysign(self.magnitude, -self.counter)
             self.counter = self.counter + inc
@@ -35,6 +35,11 @@ class Counter:
 
         elif self.state == "L":
             self.counter = max(-self.max_turn, self.counter - self.magnitude)
-
+            if self.counter > 0:
+                for i in range(tilt_reduction_reaction):
+                    self.counter = max(-self.max_turn, self.counter - self.magnitude)
         elif self.state == "R":
             self.counter = min(self.max_turn, self.counter + self.magnitude)
+            if self.counter < 0:
+                for i in range(tilt_reduction_reaction):
+                    self.counter = min(self.max_turn, self.counter + self.magnitude)

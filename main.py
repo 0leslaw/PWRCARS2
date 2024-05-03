@@ -6,18 +6,25 @@ import math
 class Game:
     def __init__(self):
         player_sprite = car_sprite.Car(WIDTH / 2, HEIGHT / 2, "./textures/silver_car.png", 1500, )
-        self.player = pygame.sprite.GroupSingle(player_sprite)
-
+        self.player = player_sprite
+        background = pygame.image.load("./textures/backg2.png").convert()
+        background = pygame.transform.scale(background, (background.get_width() * 3, background.get_height() * 3))
+        self.background = background
     def run(self):
+        self.handle_background()
         self.player.draw(screen)
-        self.player.sprite.move()
+        self.player.move()
         if clock.get_time() % 2 == 0:
-            self.player.sprite.print_status()
-        draw_a_line(self.player.sprite)
+            self.player.print_status()
+        draw_a_line(self.player)
+    def handle_background(self):
 
+        background_rect = self.background.get_rect(topleft=-self.player.location)
+        screen.blit(self.background, background_rect)
 
 def draw_a_line(car: car_sprite.Car):
     # Calculate the end points of the line
+
     length = 20
     start_point = (40, 40)
     angle_radians = car.rotation - math.pi/2
@@ -32,7 +39,7 @@ def draw_a_line(car: car_sprite.Car):
 
 
 if __name__ == '__main__':
-    WIDTH, HEIGHT = 800, 600
+    WIDTH, HEIGHT = 1400, 800
     FRAME_RATE = 30
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -41,14 +48,15 @@ if __name__ == '__main__':
     game = Game()
 
 
+    ang= 0
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
         game.run()
+
         pygame.display.update()
-        screen.fill((255, 255, 255))
         clock.tick(FRAME_RATE)
 
 
