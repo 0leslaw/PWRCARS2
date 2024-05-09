@@ -1,0 +1,3 @@
+the rebound of the car can be inaccurate if once it rebound and then it
+catches the wall again due to rotation. Thus the new_speed gets the incorrect
+sense

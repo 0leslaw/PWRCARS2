@@ -1,25 +1,45 @@
 import pygame
 from sys import exit
-import car_sprite
+import car_sprite, map_sprite
 import math
+import numpy as np
+
+import my_utils
+
 
 class Game:
     def __init__(self):
+        # FIXME REMOVE THIS AFTER PRODUCTION
+        #
+        my_utils.VecsTest.screen = screen
+        #
         player_sprite = car_sprite.Car(WIDTH / 2, HEIGHT / 2, "./textures/silver_car.png", 1500, )
         self.player = player_sprite
         background = pygame.image.load("./textures/backg2.png").convert()
         background = pygame.transform.scale(background, (background.get_width() * 3, background.get_height() * 3))
-        self.background = background
+        self.background = map_sprite.Map(np.array([-300, -1300]))
+
     def run(self):
-        self.handle_background()
+        # self.handle_background()
+        screen.fill((0, 0, 0))
+        self.background.collisions([self.player])
+        self.background.update(self.player.delta_location + self.player.init_location)
+        self.background.draw(screen, self.player.delta_location)
         self.player.draw(screen)
         self.player.move()
-        if clock.get_time() % 2 == 0:
-            self.player.print_status()
+        #   FIXME REMOVE
+        #
+        my_utils.VecsTest.blit_vec()
+        #
+
         draw_a_line(self.player)
+        # img = pygame.image.load("./textures/pwr_map/map_textures/1_R_min_102.png").convert_alpha()
+        # screen.blit(img, -(self.player.location))
+        self.player.print_status(screen)
+
     def handle_background(self):
 
-        background_rect = self.background.get_rect(topleft=-self.player.location)
+        background_rect = self.background.get_rect(topleft=-self.player.delta_location)
         screen.blit(self.background, background_rect)
 
 def draw_a_line(car: car_sprite.Car):
