@@ -152,7 +152,7 @@ class Map(pygame.sprite.Sprite):
             for i, wheel in enumerate(sprites_wheels):
                 # print(sprites_wheels[i].astype(int))
                 try:
-                    if self.main_img_mask.get_at(sprites_wheels[i].astype(int) - self.main_img_location) == ConfigData.mask_color:
+                    if self.main_img_mask.get_at(sprites_wheels[i].astype(int) - self.main_img_location) == ConfigData.get_attr('mask_color'):
                             my_engine.handle_map_collision(sprite, sprites_wheels[i].astype(int) - self.main_img_location, self.main_img_mask)
                 except IndexError:
                     print("Tried collision with non main tile")

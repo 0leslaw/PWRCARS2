@@ -65,20 +65,21 @@ class VecsTest:
     screen = None
     vecs: dict[str, np.ndarray] = {}
     vecs_origin = np.array([200, 100])
-    colors = list(ConfigData.colors.values())
+    colors = list(ConfigData.get_attr('colors').values())
 
     def __init__(self):
         pass
 
     @staticmethod
     def blit_vec():
-        font = pygame.font.Font(None, 13)  # None means default system font, 36 is the font size
-
-        for i, name, vec in enumerate(VecsTest.vecs.items()):
+        font_size = 30
+        font = pygame.font.Font(None, font_size)  # None means default system font, 36 is the font size
+        pygame.draw.rect(VecsTest.screen, (0, 0, 0, 255), pygame.Rect(0, 0, 300, font_size*len(VecsTest.vecs)))
+        for i, (name, vec) in enumerate(VecsTest.vecs.items()):
             curr_color = VecsTest.colors[i]
             #   blit the name
             text_surface = font.render(name, 0,
                                        curr_color)
-            VecsTest.screen.blit(text_surface, (10, 10))
+            VecsTest.screen.blit(text_surface, (i, i*font_size))
             # blit the vector
             pygame.draw.line(VecsTest.screen, curr_color, VecsTest.vecs_origin, VecsTest.vecs_origin+vec, 2)

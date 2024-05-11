@@ -83,7 +83,7 @@ class Car(pygame.sprite.Sprite):
         # Render the text onto a surface
         text_surface = font.render(message, 0,
                                    (255, 255, 255))  # True enables anti-aliasing, (255, 255, 255) is white color
-        screen.blit(text_surface, (10,10))
+        screen.blit(text_surface, (10, 10))
 
     def update_rotation_image(self):
         pass
