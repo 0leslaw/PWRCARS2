@@ -2,9 +2,9 @@ import os
 import numpy as np
 import pygame
 
-import my_engine
 import my_utils
 from config_loaded import ConfigData
+
 
 class Map(pygame.sprite.Sprite):
 
@@ -159,21 +159,34 @@ class Map(pygame.sprite.Sprite):
             return True
 
     def collisions(self, cars_list):
+        from my_engine import handle_map_collision
         for sprite in cars_list:
             sprites_wheels = sprite.get_all_wheels_abs_positions(as_arrays=True)
-            # if my_utils.point_collides(self.image_masks[self.main_img_ind], sprites_wheels[0].astype(int)):
             for i, wheel in enumerate(sprites_wheels):
                 # print(sprites_wheels[i].astype(int))
                 try:
-                    if self.main_img_mask.get_at(sprites_wheels[i].astype(int) - self.main_img_location) == ConfigData.get_attr('mask_color'):
-                            my_engine.handle_map_collision(sprite, sprites_wheels[i].astype(int) - self.main_img_location, self.main_img_mask)
+                    if self.get_pixel_from_mask_map(sprites_wheels[i]) == ConfigData.get_attr('mask_color'):
+                        handle_map_collision(sprite, sprites_wheels[i].astype(int), self)
                 except IndexError:
-                    print("Tried collision with non main tile")
+                    print("Tried collision outside the tile")
                     continue
-
 
     def next_img_ind(self, index):
         return index + 1 if index != len(self.images) - 1 else 0
 
     def prev_img_ind(self, index):
         return index - 1 if index != 0 else len(self.images) - 1
+
+    def get_pixel_from_mask_map(self, point: np.ndarray):
+        #   try except instead of ifs for faster execution
+        try:
+            the_pixel = self.main_img_mask.get_at(point.astype(int) - self.main_img_location)
+        except IndexError:
+            try:
+                the_pixel = self.next_to_main_img_mask.get_at(point.astype(int) - self.next_to_main_img_location)
+            except IndexError:
+                try:
+                    the_pixel = self.prev_to_main_img_mask.get_at(point.astype(int) - self.prevdddd_to_main_img_location)
+                except IndexError:
+                    raise IndexError("Sampled pixel outside the 3 main tiles")
+        return the_pixel

@@ -4,6 +4,7 @@ import numpy as np
 import pygame
 
 import car_sprite
+from map_sprite import Map
 import my_utils
 from my_utils import lin_to_exponential
 from config_loaded import ConfigData
@@ -43,7 +44,7 @@ def apply_speeds(car: car_sprite):
 
 
 
-def get_vector_along_wall_tangent(point_of_contact: np.ndarray, image):
+def get_vector_along_wall_tangent(point_of_contact: np.ndarray, map: Map):
     """
     will make a small circle of a small resolution (number of vertices) around the
     point of contact sampling for a wall approximation, then returns
@@ -59,34 +60,35 @@ def get_vector_along_wall_tangent(point_of_contact: np.ndarray, image):
     step_angle = 2 * np.pi / resolution_subdivision
 
     # TODO is it even a correct word
-    directrix = np.array([0, radius])
-    #   find any point outside the wall for a clear start
-    while image.get_at((point_of_contact + directrix).astype(int)) == ConfigData.get_attr('mask_color'):
-        print("petla1")
-        directrix = my_utils.rotate_vector(directrix, step_angle)
-    #   assume we have to do this in a while loop because there might be a calculation err
-    while image.get_at((point_of_contact + directrix).astype(int)) != ConfigData.get_attr('mask_color'):
-        directrix = my_utils.rotate_vector(directrix, step_angle)
-        print("petla2")
-    wall_points = []
-    #   while we haven't left the wall zone
-    while image.get_at((point_of_contact + directrix).astype(int)) == ConfigData.get_attr('mask_color'):
-        wall_points.append(directrix)
-        print("petla3")
-        print(directrix)
-        directrix = my_utils.rotate_vector(directrix, step_angle)
-        print(wall_points[-1] - wall_points[0])
+    def helper():
+        directrix = np.array([0, radius])
+        #   find any point outside the wall for a clear start
+        while map.get_pixel_from_mask_map(point_of_contact + directrix) == ConfigData.get_attr('mask_color'):
+            print("petla1")
+            directrix = my_utils.rotate_vector(directrix, step_angle)
+        #   assume we have to do this in a while loop because there might be a calculation err
+        while map.get_pixel_from_mask_map(point_of_contact + directrix) != ConfigData.get_attr('mask_color'):
+            directrix = my_utils.rotate_vector(directrix, step_angle)
+            print("petla2")
+        wall_points = []
+        #   while we haven't left the wall zone
+        while map.get_pixel_from_mask_map(point_of_contact + directrix) == ConfigData.get_attr('mask_color'):
+            wall_points.append(directrix)
+            print("petla3")
+            print(directrix)
+            directrix = my_utils.rotate_vector(directrix, step_angle)
+            print(wall_points[-1] - wall_points[0])
     return wall_points[-1] - wall_points[0]
 
 
-def get_wall_normal(point_of_contact: np.ndarray, image):
+def get_wall_normal(point_of_contact: np.ndarray, map: Map):
     """
     by rotating the vector along tangent by 90 deg, we are sure it returns a normal
     :param image: has black pixels where we detect collision
     :param point_of_contact:
     :return: normal unit vector of normal of the approximated wall tangent
     """
-    wall_tangent = get_vector_along_wall_tangent(point_of_contact, image)
+    wall_tangent = get_vector_along_wall_tangent(point_of_contact, map)
     #   FIXME RM
     #
     my_utils.VecsTest.vecs['wall_tangent'] = 70 * my_utils.get_unit_vector(wall_tangent)
@@ -94,16 +96,16 @@ def get_wall_normal(point_of_contact: np.ndarray, image):
     return my_utils.get_unit_vector(my_utils.rotate_vector(wall_tangent, np.pi / 2))
 
 
-def get_rebound_direction(point_of_contact: np.ndarray, movement_direction: np.ndarray, image,
+def get_rebound_direction(point_of_contact: np.ndarray, movement_direction: np.ndarray, map: Map,
                           to_unit=False) -> np.ndarray:
     """
     :param to_unit: specifies if you want the result to be a unit vector
     :param point_of_contact:
     :param movement_direction:
-    :param image: has black pixels where we detect collision
+    :param map: has black pixels where we detect collision
     :return: rebound direction
     """
-    wall_normal = get_wall_normal(point_of_contact, image)
+    wall_normal = get_wall_normal(point_of_contact, map)
     # wall_normal = np.array([0, 1])
     #   FIXME RM
     #
@@ -112,7 +114,7 @@ def get_rebound_direction(point_of_contact: np.ndarray, movement_direction: np.n
     return my_utils.mirror_vector(movement_direction, wall_normal)
 
 
-def get_turn_rebound_direction(point_of_contact: np.ndarray, center_of_mass: np.ndarray, image):
+def get_turn_rebound_direction(point_of_contact: np.ndarray, center_of_mass: np.ndarray, map: Map):
     """
 
     :param center_of_mass:
@@ -121,18 +123,16 @@ def get_turn_rebound_direction(point_of_contact: np.ndarray, center_of_mass: np.
     :param image:
     :return: -1 if clockwise and 1 if counterclockwise
     """
-    wall_normal = get_wall_normal(point_of_contact, image)
+    wall_normal = get_wall_normal(point_of_contact, map)
     contact_to_center_vec = center_of_mass - point_of_contact
     return -1 if my_utils.get_angle_between_vectors(wall_normal, contact_to_center_vec) > 90 else 1
 
 
-def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, image):
+def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, map: Map):
     dampening_factor = 0.1
-    # car.rotation_speed = (get_turn_rebound_direction(point_of_contact, car.abs_location, image)
-    #                       * abs(car.rotation_speed))
     rebound_vel = get_rebound_direction(point_of_contact,
                                         car.velocity,
-                                        image,
+                                        map,
                                         True)
     rebound_vel *= dampening_factor
     # FIXME REMOVE AFTER PRODUCITON
@@ -141,7 +141,7 @@ def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, imag
     #
     car.longitudinal_speed.reset()
     car.rebound_velocity.start(rebound_vel)
-    car.rebound_angular_vel.count = (get_turn_rebound_direction(point_of_contact, car.abs_location, image)
+    car.rebound_angular_vel.count = (get_turn_rebound_direction(point_of_contact, car.abs_location, map)
                                      * abs(car.rotation_speed))
     car.delta_location += 20 * my_utils.get_unit_vector(my_utils.get_unit_vector(rebound_vel))
 
