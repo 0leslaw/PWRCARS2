@@ -111,7 +111,7 @@ class Map(pygame.sprite.Sprite):
         :param offset: is the position of the player on the screen
         :return:
         """
-        screen.blit(self.main_img_mask, self.main_img_location - offset)
+        screen.blit(self.main_image, self.main_img_location - offset)
         screen.blit(self.prev_to_main_img, self.prev_to_main_img_location - offset)
         screen.blit(self.next_to_main_img, self.next_to_main_img_location - offset)
 

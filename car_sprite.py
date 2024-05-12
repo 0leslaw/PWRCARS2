@@ -3,9 +3,8 @@ from email.mime import image
 from typing import Dict
 import pygame
 import numpy as np
-
 import my_utils
-from counter import Counter
+from counter import *
 
 
 class Car(pygame.sprite.Sprite):
@@ -21,7 +20,8 @@ class Car(pygame.sprite.Sprite):
         self.rotation_speed = 0
         self.steerwheel_turn_extent = Counter("S", magnitude=0.02, max_turn=0.5)     # straight
         self.longitudinal_speed = Counter("S", magnitude=0.1, max_turn=8)
-        self.transverse_speed = Counter("S", magnitude=0.1, max_turn=8)
+        self.rebound_velocity = TwoDimentionalCounter(Counter("S", magnitude=0.1, max_turn=8,
+                                                              normalizer_fun=my_utils.lin_to_regulated(my_utils.lin_to_exponential, 0.4, 1., 4.)))
         self.weight = weight
         self.axle_height = axle_prop * self.rect.height / 2
 
@@ -30,6 +30,7 @@ class Car(pygame.sprite.Sprite):
         """is the abstract location of the car i.e. where it would be
         if we didn't consider a player-central perspective"""
         return self.init_location + self.delta_location
+
     def handle_steering(self):
         key = pygame.key.get_pressed()
         absolute_vel_change_vec = np.ndarray([0, 0])
@@ -79,7 +80,7 @@ class Car(pygame.sprite.Sprite):
 
     def print_status(self, screen):
         font = pygame.font.Font(None, 36)  # None means default system font, 36 is the font size
-        message = self.delta_location.__str__() + self.longitudinal_speed.counter.__str__()
+        message = self.delta_location.__str__() + self.longitudinal_speed.count.__str__()
         # Render the text onto a surface
         text_surface = font.render(message, 0,
                                    (255, 255, 255))  # True enables anti-aliasing, (255, 255, 255) is white color

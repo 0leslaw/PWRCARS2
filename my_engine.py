@@ -5,18 +5,18 @@ import pygame
 
 import car_sprite
 import my_utils
-import my_utils as utils
+from my_utils import lin_to_exponential
 from config_loaded import ConfigData
 
 
 #   THE CALCULATIONS ARE *NOT* PHYSICALLY ACCURATE
 
 def calculate_car_speeds(car: car_sprite.Car):
-    steering_angle = car.steerwheel_turn_extent.counter
+    steering_angle = car.steerwheel_turn_extent.count
 
-    car.rotation_speed = steering_angle * lin_to_regulated(car.longitudinal_speed.counter, coef=0.1,
-                                                           max_amplitude=0.5)
-    car.transverse_speed.two_side_scale_update()
+    car.rotation_speed = steering_angle * lin_to_exponential(car.longitudinal_speed.count, coef=0.1,
+                                                             max_amplitude=0.5)
+    car.rebound_velocity.update_counter()
     apply_speeds(car)
 
 
@@ -24,22 +24,22 @@ def apply_speeds(car: car_sprite):
     car.rotation += car.rotation_speed
     # car.rotation = car.rotation % (2*math.pi)
     side_traction_loss = car.rotation_speed / math.pi
-    side_vel = -10 * side_traction_loss * car.longitudinal_speed.counter
+    side_vel = -10 * side_traction_loss * car.longitudinal_speed.count
 
-    forward_vel = 10 * (1 - side_traction_loss) * lin_to_regulated(-car.longitudinal_speed.counter, coef=0.4,
-                                                                   degree=1, max_amplitude=4)
+    forward_vel = 10 * (1 - side_traction_loss) * lin_to_exponential(-car.longitudinal_speed.count, coef=0.4,
+                                                                     degree=1, max_amplitude=4)
     absolute_x_vec = np.array([side_vel, forward_vel])
     # absolute_x_vec = np.array([-20 * lin_to_regulated(car.rotation_speed, degree=4) * car.gas_or_brake_pedal_extent.counter,
     #                            10 * lin_to_regulated(-car.gas_or_brake_pedal_extent.counter, degree=2, max_amplitude=2)])
-    delta_x_vec = utils.rotate_vector(absolute_x_vec, car.rotation)
-    car.velocity = delta_x_vec
-    car.delta_location += delta_x_vec
+    delta_x_vec = my_utils.rotate_vector(absolute_x_vec, car.rotation)
+    car.velocity = delta_x_vec + car.rebound_velocity.vector_now
+    print(car.rebound_velocity.vector_now)
+    car.delta_location += car.velocity
     # delta_x_vec[1] = -delta_x_vec[1]
     # car.rect.center = car.location
 
 
-def lin_to_regulated(x, coef=3, degree=3, max_amplitude=1.3) -> int:
-    return np.clip(coef * x ** degree, -max_amplitude, max_amplitude)
+
 
 
 def get_vector_along_wall_tangent(point_of_contact: np.ndarray, image):
@@ -126,9 +126,9 @@ def get_turn_rebound_direction(point_of_contact: np.ndarray, center_of_mass: np.
 
 
 def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, image):
-    dampening_factor = 0.5
+    dampening_factor = 0.05
     # car.rotation_speed = (get_turn_rebound_direction(point_of_contact, car.abs_location, image)
-    #                       * abs(car.rotation_speed) * dampening_factor)
+    #                       * abs(car.rotation_speed))
     rebound_vel = get_rebound_direction(point_of_contact,
                                         car.velocity,
                                         image,
@@ -138,8 +138,8 @@ def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, imag
     #
     my_utils.VecsTest.vecs['rebound_dir'] = 70*my_utils.get_unit_vector(rebound_vel)
     #
-    car.transverse_speed.counter = rebound_vel[0]
-    car.longitudinal_speed.counter = rebound_vel[1]
+    car.longitudinal_speed.reset()
+    car.rebound_velocity.start(rebound_vel)
     car.delta_location += 50 * my_utils.get_unit_vector(my_utils.get_unit_vector(rebound_vel))
 
 

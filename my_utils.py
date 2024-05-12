@@ -3,6 +3,8 @@ import configparser
 import numpy as np
 import pygame
 from config_loaded import ConfigData
+
+
 def same_sign(num1, num2):
     # Przesunięcie bitowe o 31 bity w lewo - dostaniemy 1 dla liczby ujemnej i 0 dla liczby nieujemnej
     # sign1 = (num1 >> 31) & 1
@@ -42,8 +44,8 @@ def mirror_vector(vector: np.ndarray, normal: np.ndarray, not_normal=False):
         normal = normal / np.linalg.norm(normal)  # Ensure normal vector is unit length
     # return vector - 2 * np.outer(np.dot(vector, normal), normal).squeeze()
     n1, n2 = normal[0], normal[1]
-    mirror_matrix = np.array([[1-2*n1**2, -2*n1*n2],
-                             [-2*n1*n2, 1-2*n2**2]])
+    mirror_matrix = np.array([[1 - 2 * n1 ** 2, -2 * n1 * n2],
+                              [-2 * n1 * n2, 1 - 2 * n2 ** 2]])
     return np.dot(mirror_matrix, vector)
 
 
@@ -54,10 +56,15 @@ def get_angle_between_vectors(vector_1, vector_2):
     return np.arccos(dot_product)
 
 
-def mask_color():
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    return tuple(map(int, config['special_colors']['mask_color'].split(', ')))
+def lin_to_exponential(x, coef=3., degree=3., max_amplitude=1.3) -> float:
+    return np.clip(coef * x ** degree, -max_amplitude, max_amplitude)
+
+
+def lin_to_regulated(fun, *args):
+    def regulated(x):
+        return fun(x, *args)
+
+    return regulated
 
 
 # FIXME
@@ -74,12 +81,12 @@ class VecsTest:
     def blit_vec():
         font_size = 30
         font = pygame.font.Font(None, font_size)  # None means default system font, 36 is the font size
-        pygame.draw.rect(VecsTest.screen, (0, 0, 0, 255), pygame.Rect(0, 0, 300, font_size*len(VecsTest.vecs)))
+        pygame.draw.rect(VecsTest.screen, (0, 0, 0, 255), pygame.Rect(0, 0, 300, font_size * len(VecsTest.vecs)))
         for i, (name, vec) in enumerate(VecsTest.vecs.items()):
             curr_color = VecsTest.colors[i]
             #   blit the name
             text_surface = font.render(name, 0,
                                        curr_color)
-            VecsTest.screen.blit(text_surface, (i, i*font_size))
+            VecsTest.screen.blit(text_surface, (i, i * font_size))
             # blit the vector
-            pygame.draw.line(VecsTest.screen, curr_color, VecsTest.vecs_origin, VecsTest.vecs_origin+vec, 2)
+            pygame.draw.line(VecsTest.screen, curr_color, VecsTest.vecs_origin, VecsTest.vecs_origin + vec, 2)
