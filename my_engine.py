@@ -31,7 +31,7 @@ def apply_speeds(car: car_sprite):
     absolute_x_vec = np.array([side_vel, forward_vel])
     # absolute_x_vec = np.array([-20 * lin_to_regulated(car.rotation_speed, degree=4) * car.gas_or_brake_pedal_extent.counter,
     #                            10 * lin_to_regulated(-car.gas_or_brake_pedal_extent.counter, degree=2, max_amplitude=2)])
-    delta_x_vec = utils.rotate_vector(absolute_x_vec, car.rotation) + car.transverse_speed.counter
+    delta_x_vec = utils.rotate_vector(absolute_x_vec, car.rotation)
     car.velocity = delta_x_vec
     car.delta_location += delta_x_vec
     # delta_x_vec[1] = -delta_x_vec[1]
@@ -125,7 +125,7 @@ def get_turn_rebound_direction(point_of_contact: np.ndarray, center_of_mass: np.
     return -1 if my_utils.get_angle_between_vectors(wall_normal, contact_to_center_vec) > 90 else 1
 
 
-def handle_map_collision(car: car_sprite.Coar, point_of_contact: np.ndarray, image):
+def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, image):
     dampening_factor = 0.5
     # car.rotation_speed = (get_turn_rebound_direction(point_of_contact, car.abs_location, image)
     #                       * abs(car.rotation_speed) * dampening_factor)
@@ -136,11 +136,11 @@ def handle_map_collision(car: car_sprite.Coar, point_of_contact: np.ndarray, ima
     rebound_vel *= dampening_factor
     # FIXME REMOVE AFTER PRODUCITON
     #
-    my_utils.VecsTest.vecs['rebound_dir'] = rebound_vel
+    my_utils.VecsTest.vecs['rebound_dir'] = 70*my_utils.get_unit_vector(rebound_vel)
     #
     car.transverse_speed.counter = rebound_vel[0]
     car.longitudinal_speed.counter = rebound_vel[1]
-    car.delta_location += 20 * my_utils.get_unit_vector(rebound_vel)
+    car.delta_location += 50 * my_utils.get_unit_vector(my_utils.get_unit_vector(rebound_vel))
 
 
 #   TODO USIADZ NA SPOKOJNIE I PRZEANALIZUJ JAKA FUNKCJE PELNIA POLA CAR
