@@ -22,6 +22,7 @@ class Car(pygame.sprite.Sprite):
         self.longitudinal_speed = Counter("S", magnitude=0.1, max_turn=8)
         self.rebound_velocity = TwoDimentionalCounter(Counter("S", magnitude=0.1, max_turn=8,
                                                               normalizer_fun=my_utils.lin_to_regulated(my_utils.lin_to_exponential, 0.4, 1., 4.)))
+        self.rebound_angular_vel = Counter("S", magnitude=0.02, max_turn=0.5)
         self.weight = weight
         self.axle_height = axle_prop * self.rect.height / 2
 

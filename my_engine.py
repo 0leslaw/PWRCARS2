@@ -16,7 +16,9 @@ def calculate_car_speeds(car: car_sprite.Car):
 
     car.rotation_speed = steering_angle * lin_to_exponential(car.longitudinal_speed.count, coef=0.1,
                                                              max_amplitude=0.5)
+    car.rotation_speed += car.rebound_angular_vel.count
     car.rebound_velocity.update_counter()
+    car.rebound_angular_vel.two_side_scale_update()
     apply_speeds(car)
 
 
@@ -126,7 +128,7 @@ def get_turn_rebound_direction(point_of_contact: np.ndarray, center_of_mass: np.
 
 
 def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, image):
-    dampening_factor = 0.05
+    dampening_factor = 0.1
     # car.rotation_speed = (get_turn_rebound_direction(point_of_contact, car.abs_location, image)
     #                       * abs(car.rotation_speed))
     rebound_vel = get_rebound_direction(point_of_contact,
@@ -140,7 +142,9 @@ def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, imag
     #
     car.longitudinal_speed.reset()
     car.rebound_velocity.start(rebound_vel)
-    car.delta_location += 50 * my_utils.get_unit_vector(my_utils.get_unit_vector(rebound_vel))
+    car.rebound_angular_vel.count = (get_turn_rebound_direction(point_of_contact, car.abs_location, image)
+                                     * abs(car.rotation_speed))
+    car.delta_location += 20 * my_utils.get_unit_vector(my_utils.get_unit_vector(rebound_vel))
 
 
 #   TODO USIADZ NA SPOKOJNIE I PRZEANALIZUJ JAKA FUNKCJE PELNIA POLA CAR
