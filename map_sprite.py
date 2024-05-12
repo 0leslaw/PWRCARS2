@@ -55,6 +55,14 @@ class Map(pygame.sprite.Sprite):
     def main_img_mask(self):
         return self.image_masks[self.main_img_ind]
 
+    @property
+    def prev_to_main_img_mask(self):
+        return self.image_masks[self.prev_img_ind(self.main_img_ind)]
+
+    @property
+    def next_to_main_img_mask(self):
+        return self.image_masks[self.next_img_ind(self.main_img_ind)]
+
     def _get_locations(self, textures_dir_path, init_map_offset: np.ndarray):
         name_list = os.listdir(textures_dir_path)
         name_list = sorted(name_list, key=lambda name: int(name.split("_")[0]))
@@ -111,9 +119,14 @@ class Map(pygame.sprite.Sprite):
         :param offset: is the position of the player on the screen
         :return:
         """
-        screen.blit(self.main_image, self.main_img_location - offset)
-        screen.blit(self.prev_to_main_img, self.prev_to_main_img_location - offset)
-        screen.blit(self.next_to_main_img, self.next_to_main_img_location - offset)
+        # screen.blit(self.main_image, self.main_img_location - offset)
+        # screen.blit(self.prev_to_main_img, self.prev_to_main_img_location - offset)
+        # screen.blit(self.next_to_main_img, self.next_to_main_img_location - offset)
+        #
+        #   FIXME REMOVE
+        screen.blit(self.main_img_mask, self.main_img_location - offset)
+        screen.blit(self.prev_to_main_img_mask, self.prev_to_main_img_location - offset)
+        screen.blit(self.next_to_main_img_mask, self.next_to_main_img_location - offset)
 
     def update(self, offset):
         self.update_main_image(offset)

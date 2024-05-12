@@ -35,7 +35,6 @@ def apply_speeds(car: car_sprite):
     #                            10 * lin_to_regulated(-car.gas_or_brake_pedal_extent.counter, degree=2, max_amplitude=2)])
     delta_x_vec = my_utils.rotate_vector(absolute_x_vec, car.rotation)
     car.velocity = delta_x_vec + car.rebound_velocity.vector_now
-    print(car.rebound_velocity.vector_now)
     car.delta_location += car.velocity
     # delta_x_vec[1] = -delta_x_vec[1]
     # car.rect.center = car.location
