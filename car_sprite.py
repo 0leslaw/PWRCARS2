@@ -97,6 +97,10 @@ class Car(pygame.sprite.Sprite):
         rec = rotated_img.get_rect(center=self.rect.center)
         screen.blit(rotated_img, rec)
         self.draw_wheel_trail(screen)
+        #   FIXME REMOVE
+        #
+        my_utils.VecsTest.vecs['velocity'] = self.velocity
+        #
 
     def draw_wheel_trail(self, screen):
         #   TODO

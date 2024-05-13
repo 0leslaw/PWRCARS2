@@ -25,20 +25,15 @@ def calculate_car_speeds(car: car_sprite.Car):
 
 def apply_speeds(car: car_sprite):
     car.rotation += car.rotation_speed
-    # car.rotation = car.rotation % (2*math.pi)
     side_traction_loss = car.rotation_speed / math.pi
     side_vel = -10 * side_traction_loss * car.longitudinal_speed.count
 
     forward_vel = 10 * (1 - side_traction_loss) * lin_to_exponential(-car.longitudinal_speed.count, coef=0.4,
                                                                      degree=1, max_amplitude=4)
     absolute_x_vec = np.array([side_vel, forward_vel])
-    # absolute_x_vec = np.array([-20 * lin_to_regulated(car.rotation_speed, degree=4) * car.gas_or_brake_pedal_extent.counter,
-    #                            10 * lin_to_regulated(-car.gas_or_brake_pedal_extent.counter, degree=2, max_amplitude=2)])
     delta_x_vec = my_utils.rotate_vector(absolute_x_vec, car.rotation)
     car.velocity = delta_x_vec + car.rebound_velocity.vector_now
     car.delta_location += car.velocity
-    # delta_x_vec[1] = -delta_x_vec[1]
-    # car.rect.center = car.location
 
 
 
@@ -169,7 +164,7 @@ def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, map:
     car.longitudinal_speed.reset()
     car.rebound_velocity.start(rebound_vel)
     car.rebound_angular_vel.count = (get_turn_rebound_direction(point_of_contact, car.abs_location, map)
-                                     * abs(car.rotation_speed))
+                                     * abs(car.rotation_speed) * 1.2)
     car.delta_location += 20 * my_utils.get_unit_vector(my_utils.get_unit_vector(rebound_vel))
 
 
