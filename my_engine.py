@@ -117,7 +117,11 @@ def get_wall_normal(point_of_contact: np.ndarray, map: Map):
     #
     my_utils.VecsTest.vecs['wall_tangent'] = 70 * my_utils.get_unit_vector(wall_tangent)
     #
-    return my_utils.get_unit_vector(my_utils.rotate_vector(wall_tangent, np.pi / 2))
+    return get_normal_from_tangent(wall_tangent)
+
+
+def get_normal_from_tangent(tangent_vector: np.ndarray):
+    return my_utils.get_unit_vector(my_utils.rotate_vector(tangent_vector, np.pi / 2))
 
 
 def get_rebound_direction(point_of_contact: np.ndarray, movement_direction: np.ndarray, map: Map,
@@ -168,6 +172,25 @@ def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, map:
     car.rebound_angular_vel.count = (get_turn_rebound_direction(point_of_contact, car.abs_location, map)
                                      * abs(car.rotation_speed) * 1.2)
     car.delta_location += 20 * my_utils.get_unit_vector(my_utils.get_unit_vector(rebound_vel))
+
+
+def handle_cars_collision(car1: car_sprite.Car, car2: car_sprite.Car):
+    #   springful collision XD assume cars have the same weight
+    dampening_factor = 0.5
+    combined_rebound_strength_divided = (np.linalg.norm(car1.velocity) + np.linalg.norm(car2.velocity)) / 2 * dampening_factor
+
+    if np.linalg.norm(car1.velocity) == 0:
+        car1_dir = my_utils.get_unit_vector(car2.velocity)
+        car2_dir = my_utils.get_unit_vector(-car2.velocity)
+    elif np.linalg.norm(car2.velocity) == 0:
+        car1_dir = my_utils.get_unit_vector(-car1.velocity)
+        car2_dir = my_utils.get_unit_vector(car1.velocity)
+    else:
+        car1_dir = my_utils.get_unit_vector(-car1.velocity)
+        car2_dir = my_utils.get_unit_vector(-car2.velocity)
+    car1.rebound_velocity.start(car1_dir * combined_rebound_strength_divided)
+    car2.rebound_velocity.start(car2_dir * combined_rebound_strength_divided)
+
 
 
 #   TODO USIADZ NA SPOKOJNIE I PRZEANALIZUJ JAKA FUNKCJE PELNIA POLA CAR

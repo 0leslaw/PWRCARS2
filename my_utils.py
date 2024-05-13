@@ -35,7 +35,7 @@ def point_collides(mask, point):
     return mask.get_at(point) != 1
 
 
-def get_unit_vector(vec):
+def get_unit_vector(vec: np.ndarray):
     return vec / np.linalg.norm(vec)
 
 

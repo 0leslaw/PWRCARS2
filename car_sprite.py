@@ -66,9 +66,6 @@ class Car(pygame.sprite.Sprite):
         self.longitudinal_speed.two_side_scale_update(2)
         self.steerwheel_turn_extent.two_side_scale_update(5)
 
-    def prepare_update(self):
-        pass
-
     def move(self):
         # self.handle_collisions(rigid_bodies)
         self.handle_steering()
@@ -95,16 +92,6 @@ class Car(pygame.sprite.Sprite):
         self.longitudinal_speed.reset()
         self.rebound_velocity.reset()
 
-    def handle_collisions(self, rigid_bodies):
-        '''
-        responsible for handling collisions between all rigid bodies
-        in the game (should be within close range to optimise)
-        :param rigid_bodies:
-        :return: None
-        '''
-        self.rect.collidelist(rigid_bodies)
-
-
     def print_status(self, screen):
         font = pygame.font.Font(None, 36)  # None means default system font, 36 is the font size
         message = self.delta_location.__str__() + self.longitudinal_speed.count.__str__()
@@ -112,8 +99,6 @@ class Car(pygame.sprite.Sprite):
         text_surface = font.render(message, 0,
                                    (255, 255, 255))  # True enables anti-aliasing, (255, 255, 255) is white color
         screen.blit(text_surface, (10, 10))
-
-
 
     def draw(self, screen, context_player_delta_loc=None):
         rot_in_degrees = np.degrees(-self.rotation)
@@ -128,6 +113,9 @@ class Car(pygame.sprite.Sprite):
         #
         my_utils.VecsTest.vecs['velocity'] = self.velocity
         #
+
+    def get_vector_to_other(self, other):
+        return other.delta_location - self.delta_location
 
     def draw_wheel_trail(self, screen):
         #   TODO

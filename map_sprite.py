@@ -146,18 +146,21 @@ class Map(pygame.sprite.Sprite):
         :param offset: is the player position
         :return:
         """
-        if not self.is_point_in_rect(offset, self.images_location[self.main_img_ind]):
-            if self.is_point_in_rect(offset, self.images_location[self.next_img_ind(self.main_img_ind)]):
+        if not self.is_point_in_img_rect(offset, self.images_location[self.main_img_ind]):
+            if self.is_point_in_img_rect(offset, self.images_location[self.next_img_ind(self.main_img_ind)]):
                 print("next")
                 self.main_img_ind = self.next_img_ind(self.main_img_ind)
-            elif self.is_point_in_rect(offset, self.images_location[self.prev_img_ind(self.main_img_ind)]):
+            elif self.is_point_in_img_rect(offset, self.images_location[self.prev_img_ind(self.main_img_ind)]):
                 self.main_img_ind = self.prev_img_ind(self.main_img_ind)
                 print("prev")
 
             else:
-                print(self.main_img_ind)
+                for i, location in enumerate(self.images_location):
+                    if self.is_point_in_img_rect(offset, location):
+                        self.main_img_ind = i
 
-    def is_point_in_rect(self, point, rectangle_top_left):
+
+    def is_point_in_img_rect(self, point, rectangle_top_left):
         x, y = point
         x1, y1 = rectangle_top_left
         x2, y2 = rectangle_top_left + np.array([self.IMG_WIDTH, self.IMG_HEIGHT])
@@ -167,30 +170,39 @@ class Map(pygame.sprite.Sprite):
         else:
             return True
 
-    def collisions(self, cars_list: List[car_sprite.Car]):
-        from my_engine import handle_map_collision
-        for car in cars_list:
-            car_wheels = car.get_all_wheels_abs_positions(as_arrays=True)
-            car_collided = False
-            for i, wheel in enumerate(car_wheels):
-                # print(car_wheels[i].astype(int))
-                try:
-                    if self.get_pixel_from_mask_map(car_wheels[i]) == ConfigData.get_attr('mask_color'):
-                        car_collided = True
-                        try:
-                            handle_map_collision(car, car_wheels[i].astype(int), self)
-                        except StuckInWallError:
-                            car.handle_errors()
+    def cars_collisions(self):
+        for context_car in self.players:
+            for car in self.players:
+                if context_car != car:
+                    print(*tuple(-context_car.get_vector_to_other(car)))
+                    if context_car.rect.colliderect(car.rect.move(*tuple(-context_car.get_vector_to_other(car)))):
+                        from my_engine import handle_cars_collision
+                        handle_cars_collision(context_car, car)
 
-                except IndexError:
-                    print("Tried collision outside the tile")
-                    continue
-                #   Logic for handling errors like getting stuck in the wall
-                if car_collided:
-                    car.ticks_in_wall.increment()
-                    print("!!!", car.ticks_in_wall.count)
-                else:
-                    car.ticks_in_wall.reset()
+    def track_boundries_collisions(self, context_car: car_sprite.Car):
+        """this depends on the context, since for every car there are different boundries"""
+        from my_engine import handle_map_collision
+        car_wheels = context_car.get_all_wheels_abs_positions(as_arrays=True)
+        car_collided = False
+        for i, wheel in enumerate(car_wheels):
+            # print(car_wheels[i].astype(int))
+            try:
+                if self.get_pixel_from_mask_map(car_wheels[i]) == ConfigData.get_attr('mask_color'):
+                    car_collided = True
+                    try:
+                        handle_map_collision(context_car, car_wheels[i].astype(int), self)
+                    except StuckInWallError:
+                        context_car.handle_errors()
+
+            except IndexError:
+                print("Tried collision outside the tile")
+                continue
+            #   Logic for handling errors like getting stuck in the wall
+            if car_collided:
+                context_car.ticks_in_wall.increment()
+                print("ticks in wall count ", context_car.ticks_in_wall.count)
+            else:
+                context_car.ticks_in_wall.reset()
 
     def next_img_ind(self, index):
         return index + 1 if index != len(self.images) - 1 else 0

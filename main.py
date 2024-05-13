@@ -23,7 +23,7 @@ class SinglePlayerGame:
     def run(self):
         # self.handle_background()
         screen.fill((0, 0, 0))
-        self.background.collisions([self.player])
+        self.background.track_boundries_collisions([self.player])
         self.background.switch_context(self.player.delta_location + self.player.init_location)
         self.background.draw(self.surface, self.player.delta_location)
         self.player.draw(screen)
@@ -39,9 +39,9 @@ class SplitScreenGame:
     def __init__(self, respawn_center, respawn_tilt, num_of_players):
         self.players = []
         if num_of_players == 2:
-            self.players = [car_sprite.Car(WIDTH / 4, HEIGHT / 2, "./textures/silver_car.png", respawn_center, respawn_tilt)]
+            self.players = [car_sprite.Car(WIDTH / 4, HEIGHT / 2, "./textures/silver_car.png", respawn_center+(500,0), respawn_tilt)]
             self.players.append(car_sprite.Car(WIDTH / 4, HEIGHT / 2, "./textures/silver_car.png",
-                                               respawn_center+np.array([-100, -100]), respawn_tilt, keys={'forward': 'i', 'left': 'j', 'right': 'l', 'backward': 'k'}))
+                                               respawn_center+np.array([400, -100]), respawn_tilt, keys={'forward': 'i', 'left': 'j', 'right': 'l', 'backward': 'k'}))
         self.map = map_sprite.Map(players=self.players)
 
         self.player2subscreen = {
@@ -53,10 +53,10 @@ class SplitScreenGame:
 
     def run(self):
         screen.fill((0, 0, 0))
+        self.map.cars_collisions()
         for player in self.players:
-            print("COO")
             self.map.switch_context(player.abs_location)
-            self.map.collisions([player])
+            self.map.track_boundries_collisions(player)
             self.map.draw(self.player2subscreen[player], player.delta_location)
             # self.player.draw(screen)
             player.move()
