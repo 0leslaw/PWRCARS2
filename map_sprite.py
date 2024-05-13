@@ -186,7 +186,7 @@ class Map(pygame.sprite.Sprite):
                 the_pixel = self.next_to_main_img_mask.get_at(point.astype(int) - self.next_to_main_img_location)
             except IndexError:
                 try:
-                    the_pixel = self.prev_to_main_img_mask.get_at(point.astype(int) - self.prevdddd_to_main_img_location)
+                    the_pixel = self.prev_to_main_img_mask.get_at(point.astype(int) - self.prev_to_main_img_location)
                 except IndexError:
                     raise IndexError("Sampled pixel outside the 3 main tiles")
         return the_pixel

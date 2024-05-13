@@ -57,20 +57,40 @@ def get_vector_along_wall_tangent(point_of_contact: np.ndarray, map: Map):
     """
     radius = 50
     resolution_subdivision = 200
-    step_angle = 2 * np.pi / resolution_subdivision
+
 
     # TODO is it even a correct word
-    def helper():
-        directrix = np.array([0, radius])
-        #   find any point outside the wall for a clear start
-        while map.get_pixel_from_mask_map(point_of_contact + directrix) == ConfigData.get_attr('mask_color'):
-            print("petla1")
-            directrix = my_utils.rotate_vector(directrix, step_angle)
-        #   assume we have to do this in a while loop because there might be a calculation err
-        while map.get_pixel_from_mask_map(point_of_contact + directrix) != ConfigData.get_attr('mask_color'):
-            directrix = my_utils.rotate_vector(directrix, step_angle)
-            print("petla2")
+    def helper(radius, resolution_subdivision):
         wall_points = []
+        step_angle = 2 * np.pi / resolution_subdivision
+        directrix = np.array([0, radius])
+        freeze_flag = True
+        #   find any point outside the wall for a clear start
+        while freeze_flag:
+            for _ in range(resolution_subdivision):
+                print("petla1")
+                directrix = my_utils.rotate_vector(directrix, step_angle)
+                if map.get_pixel_from_mask_map(point_of_contact + directrix) != ConfigData.get_attr('mask_color'):
+                    freeze_flag = False
+                    break
+            if freeze_flag:
+                directrix = 2 * directrix
+                resolution_subdivision *= 2
+
+        freeze_flag = True
+        #   make sure we are in the beginning of wall
+        while freeze_flag:
+            for i in range(resolution_subdivision):
+                directrix = my_utils.rotate_vector(directrix, step_angle)
+                print("petla2")
+                if map.get_pixel_from_mask_map(point_of_contact + directrix) == ConfigData.get_attr('mask_color'):
+                    freeze_flag = False
+                    break
+            if freeze_flag:
+                directrix = 2 * directrix
+                resolution_subdivision *= 2
+
+
         #   while we haven't left the wall zone
         while map.get_pixel_from_mask_map(point_of_contact + directrix) == ConfigData.get_attr('mask_color'):
             wall_points.append(directrix)
@@ -78,6 +98,13 @@ def get_vector_along_wall_tangent(point_of_contact: np.ndarray, map: Map):
             print(directrix)
             directrix = my_utils.rotate_vector(directrix, step_angle)
             print(wall_points[-1] - wall_points[0])
+        return wall_points
+
+    for i in range(5):
+        wall_points = helper(50 + 20 * i, 200 + 60 * i)
+        if len(wall_points) > 1:
+            break
+
     return wall_points[-1] - wall_points[0]
 
 
