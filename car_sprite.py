@@ -74,7 +74,6 @@ class Car(pygame.sprite.Sprite):
         self.handle_steering()
         from my_engine import calculate_car_speeds
         calculate_car_speeds(self)
-        self.update_rotation_image()
         self.update_path()
 
     def update_path(self):
@@ -114,14 +113,15 @@ class Car(pygame.sprite.Sprite):
                                    (255, 255, 255))  # True enables anti-aliasing, (255, 255, 255) is white color
         screen.blit(text_surface, (10, 10))
 
-    def update_rotation_image(self):
-        pass
 
 
-    def draw(self, screen):
+    def draw(self, screen, context_player_delta_loc=None):
         rot_in_degrees = np.degrees(-self.rotation)
         rotated_img = pygame.transform.rotate(self.image, rot_in_degrees)
-        rec = rotated_img.get_rect(center=self.rect.center)
+        if context_player_delta_loc is not None:
+            rec = rotated_img.get_rect(center=self.abs_location - context_player_delta_loc)
+        else:
+            rec = rotated_img.get_rect(center=self.rect.center)
         screen.blit(rotated_img, rec)
         self.draw_wheel_trail(screen)
         #   FIXME REMOVE

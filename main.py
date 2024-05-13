@@ -17,14 +17,15 @@ class SinglePlayerGame:
 
         player_sprite = car_sprite.Car(WIDTH / 2, HEIGHT / 2, "./textures/silver_car.png", respawn_center, respawn_tilt)
         self.player = player_sprite
-        self.background = map_sprite.Map()
+        self.background = map_sprite.Map(players=[self.player])
+        self.surface = screen.subsurface(2, 2, WIDTH - 2, HEIGHT - 2)
 
     def run(self):
         # self.handle_background()
         screen.fill((0, 0, 0))
         self.background.collisions([self.player])
-        self.background.update(self.player.delta_location + self.player.init_location)
-        self.background.draw(screen, self.player.delta_location)
+        self.background.switch_context(self.player.delta_location + self.player.init_location)
+        self.background.draw(self.surface, self.player.delta_location)
         self.player.draw(screen)
         self.player.move()
         #   FIXME REMOVE
@@ -36,25 +37,29 @@ class SinglePlayerGame:
 
 class SplitScreenGame:
     def __init__(self, respawn_center, respawn_tilt, num_of_players):
+        self.players = []
         if num_of_players == 2:
-            self.player1 = car_sprite.Car(WIDTH / 4, HEIGHT / 2, "./textures/silver_car.png", respawn_center, respawn_tilt)
-            self.player2 = car_sprite.Car(WIDTH * 3 / 4, HEIGHT / 2, "./textures/silver_car.png", respawn_center+np.array([-100, -100]), respawn_tilt)
-            self.map = map_sprite.Map()
+            self.players = [car_sprite.Car(WIDTH / 4, HEIGHT / 2, "./textures/silver_car.png", respawn_center, respawn_tilt)]
+            self.players.append(car_sprite.Car(WIDTH / 4, HEIGHT / 2, "./textures/silver_car.png",
+                                               respawn_center+np.array([-100, -100]), respawn_tilt, keys={'forward': 'i', 'left': 'j', 'right': 'l', 'backward': 'k'}))
+        self.map = map_sprite.Map(players=self.players)
 
-            self.canvas = pygame.Surface((WIDTH, HEIGHT))
-            player1_camera = pygame.Rect(0, 0, WIDTH/2, HEIGHT)
-            player2_camera = pygame.Rect(WIDTH/2, 0, WIDTH/2, HEIGHT)
+        self.player2subscreen = {
+            self.players[0]: screen.subsurface(0, 0, WIDTH//2, HEIGHT),
+            self.players[1]: screen.subsurface(WIDTH//2, 0, WIDTH//2, HEIGHT)
+                                 }
 
-            self.sub1 = self.canvas.subsurface(player1_camera)
-            self.sub2 = self.canvas.subsurface(player2_camera)
+
 
     def run(self):
         screen.fill((0, 0, 0))
-        self.map.collisions([self.player])
-        self.map.update(self.player.delta_location + self.player.init_location)
-        self.background.draw(screen, self.player.delta_location)
-        self.player.draw(screen)
-        self.player.move()
+        for player in self.players:
+            print("COO")
+            self.map.switch_context(player.abs_location)
+            self.map.collisions([player])
+            self.map.draw(self.player2subscreen[player], player.delta_location)
+            # self.player.draw(screen)
+            player.move()
 
 
 
@@ -69,7 +74,7 @@ if __name__ == '__main__':
         case 'single_player':
             game = SinglePlayerGame(np.array([1800., 900.]), 1.1)
         case 'split_screen':
-            game = SplitScreenGame(ConfigData.get_attr('num_of_players'))
+            game = SplitScreenGame(np.array([1800., 900.]), 1.1, ConfigData.get_attr('num_of_players'))
 
     while True:
         for event in pygame.event.get():

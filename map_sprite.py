@@ -12,12 +12,13 @@ from my_errors import StuckInWallError
 
 class Map(pygame.sprite.Sprite):
 
-    def __init__(self, init_map_offset=np.array([0, 0])):
+    def __init__(self, players: List[car_sprite.Car], init_map_offset=np.array([0, 0])):
         pygame.sprite.Sprite.__init__(self)
         textures_dir_path = "./textures/pwr_map/map_textures"
+        self.players = players
+
         self.SCALE = 2
         self.IMG_HEIGHT, self.IMG_WIDTH = 1080 * self.SCALE, 1920 * self.SCALE
-
         self.images = self._load_images(textures_dir_path)
         self.images = [pygame.transform.scale(self.images[i], (self.IMG_WIDTH, self.IMG_HEIGHT)) for i in
                        range(len(self.images))]
@@ -123,6 +124,9 @@ class Map(pygame.sprite.Sprite):
         :param offset: is the position of the player on the screen
         :return:
         """
+        #   FIXME actually also blits the main player
+        for player in self.players:
+            player.draw(screen, offset)
         # screen.blit(self.main_image, self.main_img_location - offset)
         # screen.blit(self.prev_to_main_img, self.prev_to_main_img_location - offset)
         # screen.blit(self.next_to_main_img, self.next_to_main_img_location - offset)
@@ -132,7 +136,8 @@ class Map(pygame.sprite.Sprite):
         screen.blit(self.prev_to_main_img_mask, self.prev_to_main_img_location - offset)
         screen.blit(self.next_to_main_img_mask, self.next_to_main_img_location - offset)
 
-    def update(self, offset):
+    def switch_context(self, offset):
+        """switches the current context to the map to pos of the player"""
         self.update_main_image(offset)
 
     def update_main_image(self, offset):

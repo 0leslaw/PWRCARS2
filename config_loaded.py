@@ -23,7 +23,7 @@ def read_config():
         'mask_color': mask_color(config),
         'colors': load_config_to_name2int_tuple_dict(config, 'ordinary_colors'),
         'game_mode': config['game_init']['game_mode'],
-        'num_of_players': config['game_init']['num_of_players']
+        'num_of_players': int(config['game_init']['num_of_players'])
     }
 
 
