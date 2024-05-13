@@ -83,3 +83,6 @@ class TwoDimentionalCounter:
 
     def update_counter(self):
         self.counter.diminish_two_side_scale_amplitude()
+
+    def reset(self):
+        self.counter.reset()

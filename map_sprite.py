@@ -1,9 +1,13 @@
 import os
+from typing import List
+
 import numpy as np
 import pygame
 
+import car_sprite
 import my_utils
 from config_loaded import ConfigData
+from my_errors import StuckInWallError
 
 
 class Map(pygame.sprite.Sprite):
@@ -158,18 +162,30 @@ class Map(pygame.sprite.Sprite):
         else:
             return True
 
-    def collisions(self, cars_list):
+    def collisions(self, cars_list: List[car_sprite.Car]):
         from my_engine import handle_map_collision
-        for sprite in cars_list:
-            sprites_wheels = sprite.get_all_wheels_abs_positions(as_arrays=True)
-            for i, wheel in enumerate(sprites_wheels):
-                # print(sprites_wheels[i].astype(int))
+        for car in cars_list:
+            car_wheels = car.get_all_wheels_abs_positions(as_arrays=True)
+            car_collided = False
+            for i, wheel in enumerate(car_wheels):
+                # print(car_wheels[i].astype(int))
                 try:
-                    if self.get_pixel_from_mask_map(sprites_wheels[i]) == ConfigData.get_attr('mask_color'):
-                        handle_map_collision(sprite, sprites_wheels[i].astype(int), self)
+                    if self.get_pixel_from_mask_map(car_wheels[i]) == ConfigData.get_attr('mask_color'):
+                        car_collided = True
+                        try:
+                            handle_map_collision(car, car_wheels[i].astype(int), self)
+                        except StuckInWallError:
+                            car.handle_errors()
+
                 except IndexError:
                     print("Tried collision outside the tile")
                     continue
+                #   Logic for handling errors like getting stuck in the wall
+                if car_collided:
+                    car.ticks_in_wall.increment()
+                    print("!!!", car.ticks_in_wall.count)
+                else:
+                    car.ticks_in_wall.reset()
 
     def next_img_ind(self, index):
         return index + 1 if index != len(self.images) - 1 else 0

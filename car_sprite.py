@@ -1,8 +1,10 @@
 import math
+from collections import deque
 from email.mime import image
 from typing import Dict
 import pygame
 import numpy as np
+
 import my_utils
 from counter import *
 
@@ -13,6 +15,8 @@ class Car(pygame.sprite.Sprite):
         self.image = pygame.image.load(image_path).convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(center=(x, y))
+        self.path = my_utils.reset_queue_to_length(np.array([0., 0.]), 20)
+        self.ticks_in_wall = Counter("S", max_turn=5)
         self.delta_location: np.ndarray = np.array([0., 0.])
         self.init_location: np.ndarray = np.array([x, y])
         self.velocity: np.ndarray = np.array([0, 0])
@@ -67,9 +71,30 @@ class Car(pygame.sprite.Sprite):
     def move(self):
         # self.handle_collisions(rigid_bodies)
         self.handle_steering()
-        import my_engine
-        my_engine.calculate_car_speeds(self)
+        from my_engine import calculate_car_speeds
+        calculate_car_speeds(self)
         self.update_rotation_image()
+        self.update_path()
+
+    def update_path(self):
+        self.path.popleft()
+        self.path.append(self.delta_location)
+        if self.ticks_in_wall.count == self.ticks_in_wall.max_turn:
+            self.handle_errors()
+
+    def handle_errors(self):
+        self.ticks_in_wall.reset()
+        self.delta_location = self.path.popleft()
+        self.path.append(np.array(self.delta_location))
+        print("10 razy w tym")
+        self.path = my_utils.reset_queue_to_length(self.delta_location, len(self.path))
+
+    def reset_dynamics(self):
+        self.velocity = np.ndarray([0, 0])
+        self.rotation_speed = 0
+        self.longitudinal_speed.reset()
+        self.rebound_velocity.reset()
+
     def handle_collisions(self, rigid_bodies):
         '''
         responsible for handling collisions between all rigid bodies
@@ -78,6 +103,7 @@ class Car(pygame.sprite.Sprite):
         :return: None
         '''
         self.rect.collidelist(rigid_bodies)
+
 
     def print_status(self, screen):
         font = pygame.font.Font(None, 36)  # None means default system font, 36 is the font size

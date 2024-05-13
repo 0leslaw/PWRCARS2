@@ -6,6 +6,7 @@ import pygame
 import car_sprite
 from map_sprite import Map
 import my_utils
+from my_errors import StuckInWallError
 from my_utils import lin_to_exponential
 from config_loaded import ConfigData
 
@@ -53,17 +54,16 @@ def get_vector_along_wall_tangent(point_of_contact: np.ndarray, map: Map):
     radius = 50
     resolution_subdivision = 200
 
-
-    # TODO is it even a correct word
     def helper(radius, resolution_subdivision):
         wall_points = []
         step_angle = 2 * np.pi / resolution_subdivision
         directrix = np.array([0, radius])
         freeze_flag = True
+        iteration_control = 0
         #   find any point outside the wall for a clear start
-        while freeze_flag:
+        while freeze_flag and iteration_control != 5:
             for _ in range(resolution_subdivision):
-                print("petla1")
+                # print("petla1")
                 directrix = my_utils.rotate_vector(directrix, step_angle)
                 if map.get_pixel_from_mask_map(point_of_contact + directrix) != ConfigData.get_attr('mask_color'):
                     freeze_flag = False
@@ -71,13 +71,17 @@ def get_vector_along_wall_tangent(point_of_contact: np.ndarray, map: Map):
             if freeze_flag:
                 directrix = 2 * directrix
                 resolution_subdivision *= 2
+                iteration_control += 1
+
+        if iteration_control == 5:
+            raise StuckInWallError
 
         freeze_flag = True
         #   make sure we are in the beginning of wall
         while freeze_flag:
             for i in range(resolution_subdivision):
                 directrix = my_utils.rotate_vector(directrix, step_angle)
-                print("petla2")
+                # print("petla2")
                 if map.get_pixel_from_mask_map(point_of_contact + directrix) == ConfigData.get_attr('mask_color'):
                     freeze_flag = False
                     break
@@ -89,13 +93,11 @@ def get_vector_along_wall_tangent(point_of_contact: np.ndarray, map: Map):
         #   while we haven't left the wall zone
         while map.get_pixel_from_mask_map(point_of_contact + directrix) == ConfigData.get_attr('mask_color'):
             wall_points.append(directrix)
-            print("petla3")
-            print(directrix)
+            # print("petla3")
             directrix = my_utils.rotate_vector(directrix, step_angle)
-            print(wall_points[-1] - wall_points[0])
         return wall_points
 
-    for i in range(5):
+    for i in range(2):
         wall_points = helper(50 + 20 * i, 200 + 60 * i)
         if len(wall_points) > 1:
             break

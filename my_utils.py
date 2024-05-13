@@ -1,3 +1,4 @@
+from collections import deque
 from typing import List, Any
 import configparser
 import numpy as np
@@ -66,6 +67,9 @@ def lin_to_regulated(fun, *args):
 
     return regulated
 
+
+def reset_queue_to_length(point: np.ndarray, length: int) -> deque:
+    return deque([point.copy() for _ in range(length)])
 
 # FIXME
 class VecsTest:
