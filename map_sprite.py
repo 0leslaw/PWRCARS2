@@ -175,9 +175,13 @@ class Map(pygame.sprite.Sprite):
             for car in self.players:
                 if context_car != car:
                     print(*tuple(-context_car.get_vector_to_other(car)))
-                    if context_car.rect.colliderect(car.rect.move(*tuple(-context_car.get_vector_to_other(car)))):
-                        from my_engine import handle_cars_collision
-                        handle_cars_collision(context_car, car)
+                    if context_car.rect.colliderect(car.rect.move(*tuple(context_car.get_vector_to_other(car)))):
+                        print("pokrywaja sie recty")
+                        context_car_mask = pygame.mask.from_surface(pygame.transform.rotate(context_car.image, context_car.rotation))
+                        other_mask = pygame.mask.from_surface(pygame.transform.rotate(car.image, car.rotation))
+                        if context_car_mask.overlap_mask(other_mask, tuple(context_car.get_vector_to_other(car))):
+                            from my_engine import handle_cars_collision
+                            handle_cars_collision(context_car, car)
 
     def track_boundries_collisions(self, context_car: car_sprite.Car):
         """this depends on the context, since for every car there are different boundries"""

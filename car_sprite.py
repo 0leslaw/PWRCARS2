@@ -113,6 +113,7 @@ class Car(pygame.sprite.Sprite):
         #   FIXME REMOVE
         #
         my_utils.VecsTest.vecs['velocity'] = self.velocity
+
         #
 
     def get_vector_to_other(self, other):

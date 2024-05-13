@@ -176,7 +176,7 @@ def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, map:
 
 def handle_cars_collision(car1: car_sprite.Car, car2: car_sprite.Car):
     #   perfectly elastic collision, assume cars have the same weight
-    dampening_factor = 0.8
+    dampening_factor = 0.3
     combined_rebound_strength_divided = (np.linalg.norm(car1.velocity) + np.linalg.norm(car2.velocity)) / 2 * dampening_factor
 
     if np.linalg.norm(car1.velocity) == 0:
@@ -191,6 +191,9 @@ def handle_cars_collision(car1: car_sprite.Car, car2: car_sprite.Car):
     car1.rebound_velocity.start(car1_dir * combined_rebound_strength_divided)
     car2.rebound_velocity.start(car2_dir * combined_rebound_strength_divided)
 
-
+    car1.longitudinal_speed.reset()
+    car2.longitudinal_speed.reset()
+    car1.delta_location += car1_dir * 20
+    car2.delta_location += car2_dir * 20
 
 #   TODO USIADZ NA SPOKOJNIE I PRZEANALIZUJ JAKA FUNKCJE PELNIA POLA CAR
