@@ -4,6 +4,7 @@ import car_sprite, map_sprite
 import math
 import numpy as np
 
+import globals
 import my_utils
 from config_loaded import ConfigData
 
@@ -23,7 +24,7 @@ class SinglePlayerGame:
     def run(self):
         # self.handle_background()
         screen.fill((0, 0, 0))
-        self.background.track_boundries_collisions([self.player])
+        self.background.track_boundries_collisions(self.player)
         self.background.switch_context(self.player.delta_location + self.player.init_location)
         self.background.draw(self.surface, self.player.delta_location)
         self.player.draw(screen)
@@ -33,6 +34,7 @@ class SinglePlayerGame:
         my_utils.VecsTest.blit_vec()
         #
         self.player.print_status(screen)
+        globals.TICKS_PASSED += 1
 
 
 class SplitScreenGame:

@@ -170,7 +170,7 @@ def handle_cars_collision(car1: car_sprite.Car, car2: car_sprite.Car):
     #   perfectly elastic collision, assume cars have the same weight
     dampening_factor = 0.3
     combined_rebound_strength_divided = (np.linalg.norm(car1.velocity) + np.linalg.norm(car2.velocity)) / 2 * dampening_factor
-
+    combined_direction = (car1.velocity + car2.velocity)/4
     if np.linalg.norm(car1.velocity) == 0:
         car1_dir = my_utils.get_unit_vector(car2.velocity)
         car2_dir = my_utils.get_unit_vector(-car2.velocity)
@@ -180,8 +180,8 @@ def handle_cars_collision(car1: car_sprite.Car, car2: car_sprite.Car):
     else:
         car1_dir = my_utils.get_unit_vector(-car1.velocity)
         car2_dir = my_utils.get_unit_vector(-car2.velocity)
-    car1.rebound_velocity.start(car1_dir * combined_rebound_strength_divided)
-    car2.rebound_velocity.start(car2_dir * combined_rebound_strength_divided)
+    car1.rebound_velocity.start(car1_dir * combined_rebound_strength_divided + combined_direction)
+    car2.rebound_velocity.start(car2_dir * combined_rebound_strength_divided + combined_direction)
     #
     # car1.longitudinal_speed.reset()
     # car2.longitudinal_speed.reset()
