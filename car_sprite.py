@@ -14,6 +14,7 @@ class Car(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         if keys is None:
             keys = {'forward': pygame.K_w, 'left': pygame.K_a, 'backward': pygame.K_s, 'right': pygame.K_d}
+        print(keys)
         self.keys = keys
         self.image = pygame.image.load(image_path).convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
