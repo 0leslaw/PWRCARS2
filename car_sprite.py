@@ -10,25 +10,26 @@ from counter import *
 
 
 class Car(pygame.sprite.Sprite):
-    def __init__(self, x, y, image_path, weight, axle_prop: float=0.8):
+    def __init__(self, x_pos_on_screen, y_pos_on_screen, image_path, initial_position=np.array([0., 0.]), initial_rotation=0, keys=None):
         pygame.sprite.Sprite.__init__(self)
+        if keys is None:
+            keys = {'forward': 'w', 'left': 'a', 'backward': 's', 'right': 'd'}
+        self.keys = keys
         self.image = pygame.image.load(image_path).convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
-        self.rect = self.image.get_rect(center=(x, y))
+        self.rect = self.image.get_rect(center=(x_pos_on_screen, y_pos_on_screen))
         self.path = my_utils.reset_queue_to_length(np.array([0., 0.]), 20)
         self.ticks_in_wall = Counter("S", max_turn=5)
-        self.delta_location: np.ndarray = np.array([0., 0.])
-        self.init_location: np.ndarray = np.array([x, y])
+        self.delta_location: np.ndarray = initial_position
+        self.init_location: np.ndarray = np.array([x_pos_on_screen, y_pos_on_screen])
         self.velocity: np.ndarray = np.array([0, 0])
-        self.rotation = 0
+        self.rotation = initial_rotation
         self.rotation_speed = 0
         self.steerwheel_turn_extent = Counter("S", magnitude=0.02, max_turn=0.5)     # straight
         self.longitudinal_speed = Counter("S", magnitude=0.1, max_turn=8)
         self.rebound_velocity = TwoDimentionalCounter(Counter("S", magnitude=0.1, max_turn=8,
                                                               normalizer_fun=my_utils.lin_to_regulated(my_utils.lin_to_exponential, 0.4, 1., 4.)))
         self.rebound_angular_vel = Counter("S", magnitude=0.02, max_turn=0.5)
-        self.weight = weight
-        self.axle_height = axle_prop * self.rect.height / 2
 
     @property
     def abs_location(self):
@@ -44,19 +45,19 @@ class Car(pygame.sprite.Sprite):
         self.steerwheel_turn_extent.state = "S"
 
         #   handle forward backward
-        if key[pygame.K_w] is True:
+        if key[pygame.key.key_code(self.keys['forward'])] is True:
             self.longitudinal_speed.state = "R"
-        elif key[pygame.K_s] is True:
+        elif key[pygame.key.key_code(self.keys['backward'])] is True:
             self.longitudinal_speed.state = "L"
         else:
             self.longitudinal_speed.state = "S"
 
         #   handle left to right
         flag_for_both = False
-        if key[pygame.K_a] is True:
+        if key[pygame.key.key_code(self.keys['left'])] is True:
             self.steerwheel_turn_extent.state = "L"
             flag_for_both = True
-        if key[pygame.K_d] is True:
+        if key[pygame.key.key_code(self.keys['right'])] is True:
             if flag_for_both:
                 self.steerwheel_turn_extent.state = "S"
             else:

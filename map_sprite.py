@@ -12,7 +12,7 @@ from my_errors import StuckInWallError
 
 class Map(pygame.sprite.Sprite):
 
-    def __init__(self, init_map_offset):
+    def __init__(self, init_map_offset=np.array([0, 0])):
         pygame.sprite.Sprite.__init__(self)
         textures_dir_path = "./textures/pwr_map/map_textures"
         self.SCALE = 2

@@ -9,7 +9,6 @@ def mask_color(config: configparser.ConfigParser) -> Tuple[int, ...]:
 
 def load_config_to_name2int_tuple_dict(config: configparser.ConfigParser, config_branch: str) -> dict[
     str, tuple[int, ...]]:
-    config = configparser.ConfigParser()
     config.read('config.ini')
     name_tuple = config[config_branch]
     name2int_tuple = {}
@@ -17,24 +16,16 @@ def load_config_to_name2int_tuple_dict(config: configparser.ConfigParser, config
         name2int_tuple[name] = tuple(map(int, value.split(', ')))
     return name2int_tuple
 
-
 def read_config():
     config = configparser.ConfigParser()
     config.read('config.ini')
     return {
         'mask_color': mask_color(config),
-        'colors': load_config_to_name2int_tuple_dict(config, 'ordinary_colors')
+        'colors': load_config_to_name2int_tuple_dict(config, 'ordinary_colors'),
+        'game_mode': config['game_init']['game_mode'],
+        'num_of_players': config['game_init']['num_of_players']
     }
 
-
-# @dataclass
-# class ConfigData:
-#     mask_color: Tuple[int, int, int, int] = mask_color()
-#     colors: dict[str, Tuple[int, int, int, int]] = None
-#
-#     def __post_init__(self):
-#         colors = load_config_to_name2int_tuple_dict('ordinary_colors')
-# #   TODO
 
 class ConfigData:
     _instance = None
