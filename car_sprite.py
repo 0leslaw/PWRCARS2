@@ -13,7 +13,7 @@ class Car(pygame.sprite.Sprite):
     def __init__(self, x_pos_on_screen, y_pos_on_screen, image_path, initial_position=np.array([0., 0.]), initial_rotation=0, keys=None):
         pygame.sprite.Sprite.__init__(self)
         if keys is None:
-            keys = {'forward': 'w', 'left': 'a', 'backward': 's', 'right': 'd'}
+            keys = {'forward': pygame.K_w, 'left': pygame.K_a, 'backward': pygame.K_s, 'right': pygame.K_d}
         self.keys = keys
         self.image = pygame.image.load(image_path).convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
@@ -45,19 +45,19 @@ class Car(pygame.sprite.Sprite):
         self.steerwheel_turn_extent.state = "S"
 
         #   handle forward backward
-        if key[pygame.key.key_code(self.keys['forward'])] is True:
+        if key[self.keys['forward']] is True:
             self.longitudinal_speed.state = "R"
-        elif key[pygame.key.key_code(self.keys['backward'])] is True:
+        elif key[self.keys['backward']] is True:
             self.longitudinal_speed.state = "L"
         else:
             self.longitudinal_speed.state = "S"
 
         #   handle left to right
         flag_for_both = False
-        if key[pygame.key.key_code(self.keys['left'])] is True:
+        if key[self.keys['left']] is True:
             self.steerwheel_turn_extent.state = "L"
             flag_for_both = True
-        if key[pygame.key.key_code(self.keys['right'])] is True:
+        if key[self.keys['right']] is True:
             if flag_for_both:
                 self.steerwheel_turn_extent.state = "S"
             else:

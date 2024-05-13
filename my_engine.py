@@ -175,8 +175,8 @@ def handle_map_collision(car: car_sprite.Car, point_of_contact: np.ndarray, map:
 
 
 def handle_cars_collision(car1: car_sprite.Car, car2: car_sprite.Car):
-    #   springful collision XD assume cars have the same weight
-    dampening_factor = 0.5
+    #   perfectly elastic collision, assume cars have the same weight
+    dampening_factor = 0.8
     combined_rebound_strength_divided = (np.linalg.norm(car1.velocity) + np.linalg.norm(car2.velocity)) / 2 * dampening_factor
 
     if np.linalg.norm(car1.velocity) == 0:

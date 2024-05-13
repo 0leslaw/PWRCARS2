@@ -41,7 +41,8 @@ class SplitScreenGame:
         if num_of_players == 2:
             self.players = [car_sprite.Car(WIDTH / 4, HEIGHT / 2, "./textures/silver_car.png", respawn_center+(500,0), respawn_tilt)]
             self.players.append(car_sprite.Car(WIDTH / 4, HEIGHT / 2, "./textures/silver_car.png",
-                                               respawn_center+np.array([400, -100]), respawn_tilt, keys={'forward': 'i', 'left': 'j', 'right': 'l', 'backward': 'k'}))
+                                               respawn_center+np.array([400, -100]), respawn_tilt,
+                                               keys={'forward': pygame.K_UP, 'left': pygame.K_LEFT, 'right': pygame.K_RIGHT, 'backward': pygame.K_DOWN}))
         self.map = map_sprite.Map(players=self.players)
 
         self.player2subscreen = {
