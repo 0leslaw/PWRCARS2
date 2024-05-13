@@ -59,36 +59,28 @@ def get_vector_along_wall_tangent(point_of_contact: np.ndarray, map: Map):
         step_angle = 2 * np.pi / resolution_subdivision
         directrix = np.array([0, radius])
         freeze_flag = True
-        iteration_control = 0
         #   find any point outside the wall for a clear start
-        while freeze_flag and iteration_control != 5:
-            for _ in range(resolution_subdivision):
-                # print("petla1")
-                directrix = my_utils.rotate_vector(directrix, step_angle)
-                if map.get_pixel_from_mask_map(point_of_contact + directrix) != ConfigData.get_attr('mask_color'):
-                    freeze_flag = False
-                    break
-            if freeze_flag:
-                directrix = 2 * directrix
-                resolution_subdivision *= 2
-                iteration_control += 1
+        for _ in range(resolution_subdivision):
+            # print("petla1")
+            directrix = my_utils.rotate_vector(directrix, step_angle)
+            if map.get_pixel_from_mask_map(point_of_contact + directrix) != ConfigData.get_attr('mask_color'):
+                freeze_flag = False
+                break
 
-        if iteration_control == 5:
+        if freeze_flag:
             raise StuckInWallError
 
         freeze_flag = True
         #   make sure we are in the beginning of wall
-        while freeze_flag:
-            for i in range(resolution_subdivision):
-                directrix = my_utils.rotate_vector(directrix, step_angle)
-                # print("petla2")
-                if map.get_pixel_from_mask_map(point_of_contact + directrix) == ConfigData.get_attr('mask_color'):
-                    freeze_flag = False
-                    break
-            if freeze_flag:
-                directrix = 2 * directrix
-                resolution_subdivision *= 2
+        for i in range(resolution_subdivision):
+            directrix = my_utils.rotate_vector(directrix, step_angle)
+            # print("petla2")
+            if map.get_pixel_from_mask_map(point_of_contact + directrix) == ConfigData.get_attr('mask_color'):
+                freeze_flag = False
+                break
 
+        if freeze_flag:
+            raise StuckInWallError
 
         #   while we haven't left the wall zone
         while map.get_pixel_from_mask_map(point_of_contact + directrix) == ConfigData.get_attr('mask_color'):
@@ -98,7 +90,7 @@ def get_vector_along_wall_tangent(point_of_contact: np.ndarray, map: Map):
         return wall_points
 
     for i in range(2):
-        wall_points = helper(50 + 20 * i, 200 + 60 * i)
+        wall_points = helper(50 + 40 * i, 200 + 80 * i)
         if len(wall_points) > 1:
             break
 
@@ -190,10 +182,10 @@ def handle_cars_collision(car1: car_sprite.Car, car2: car_sprite.Car):
         car2_dir = my_utils.get_unit_vector(-car2.velocity)
     car1.rebound_velocity.start(car1_dir * combined_rebound_strength_divided)
     car2.rebound_velocity.start(car2_dir * combined_rebound_strength_divided)
-
-    car1.longitudinal_speed.reset()
-    car2.longitudinal_speed.reset()
-    car1.delta_location += car1_dir * 20
-    car2.delta_location += car2_dir * 20
+    #
+    # car1.longitudinal_speed.reset()
+    # car2.longitudinal_speed.reset()
+    car1.delta_location += car1_dir * 30
+    car2.delta_location += car2_dir * 30
 
 #   TODO USIADZ NA SPOKOJNIE I PRZEANALIZUJ JAKA FUNKCJE PELNIA POLA CAR

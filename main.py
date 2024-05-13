@@ -55,14 +55,14 @@ class SplitScreenGame:
 
     def run(self):
         screen.fill((0, 0, 0))
-        self.map.cars_collisions()
+
         for player in self.players:
             self.map.switch_context(player.abs_location)
             self.map.track_boundries_collisions(player)
             self.map.draw(self.player2subscreen[player], player.delta_location)
             # self.player.draw(screen)
             player.move()
-
+        self.map.cars_collisions()
 
 
 if __name__ == '__main__':

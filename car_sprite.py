@@ -84,7 +84,7 @@ class Car(pygame.sprite.Sprite):
         self.ticks_in_wall.reset()
         self.delta_location = self.path.popleft()
         self.path.append(np.array(self.delta_location))
-        print("10 razy w tym")
+        print("error razy w tym ścianu")
         self.path = my_utils.reset_queue_to_length(self.delta_location, len(self.path))
 
     def reset_dynamics(self):
@@ -108,6 +108,7 @@ class Car(pygame.sprite.Sprite):
             rec = rotated_img.get_rect(center=self.abs_location - context_player_delta_loc)
         else:
             rec = rotated_img.get_rect(center=self.rect.center)
+        self.rect = rec
         screen.blit(rotated_img, rec)
         self.draw_wheel_trail(screen)
         #   FIXME REMOVE

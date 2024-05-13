@@ -124,9 +124,7 @@ class Map(pygame.sprite.Sprite):
         :param offset: is the position of the player on the screen
         :return:
         """
-        #   FIXME actually also blits the main player
-        for player in self.players:
-            player.draw(screen, offset)
+
         # screen.blit(self.main_image, self.main_img_location - offset)
         # screen.blit(self.prev_to_main_img, self.prev_to_main_img_location - offset)
         # screen.blit(self.next_to_main_img, self.next_to_main_img_location - offset)
@@ -135,6 +133,16 @@ class Map(pygame.sprite.Sprite):
         screen.blit(self.main_img_mask, self.main_img_location - offset)
         screen.blit(self.prev_to_main_img_mask, self.prev_to_main_img_location - offset)
         screen.blit(self.next_to_main_img_mask, self.next_to_main_img_location - offset)
+        #   FIXME actually also blits the main player
+        for player in self.players:
+            player.draw(screen, offset)
+        # context_car_mask = pygame.mask.from_surface(
+        #     pygame.transform.rotate(self.players[0].image, np.degrees(-self.players[0].rotation)))
+        # screen.blit(context_car_mask.to_surface(), self.players[0].init_location)
+        # other_mask = pygame.mask.from_surface(pygame.transform.rotate(self.players[1].image, np.degrees(-self.players[1].rotation)))
+        # screen.blit(other_mask.to_surface(), self.players[1].init_location + tuple(self.players[0].get_vector_to_other(self.players[1])))
+        # pygame.draw.rect(screen,(255,255,0), self.players[0].rect)
+        # pygame.draw.rect(screen, (255,25,0), self.players[1].rect)
 
     def switch_context(self, offset):
         """switches the current context to the map to pos of the player"""
@@ -174,12 +182,10 @@ class Map(pygame.sprite.Sprite):
         for context_car in self.players:
             for car in self.players:
                 if context_car != car:
-                    print(*tuple(-context_car.get_vector_to_other(car)))
-                    if context_car.rect.colliderect(car.rect.move(*tuple(context_car.get_vector_to_other(car)))):
-                        print("pokrywaja sie recty")
-                        context_car_mask = pygame.mask.from_surface(pygame.transform.rotate(context_car.image, context_car.rotation))
-                        other_mask = pygame.mask.from_surface(pygame.transform.rotate(car.image, car.rotation))
-                        if context_car_mask.overlap_mask(other_mask, tuple(context_car.get_vector_to_other(car))):
+                    if context_car.rect.colliderect(car.rect):
+                        context_car_mask = pygame.mask.from_surface(pygame.transform.rotate(context_car.image, np.degrees(-context_car.rotation)))
+                        other_mask = pygame.mask.from_surface(pygame.transform.rotate(car.image, np.degrees(-car.rotation)))
+                        if context_car_mask.overlap(other_mask, tuple(context_car.get_vector_to_other(car))):
                             from my_engine import handle_cars_collision
                             handle_cars_collision(context_car, car)
 
@@ -198,8 +204,9 @@ class Map(pygame.sprite.Sprite):
                     except StuckInWallError:
                         context_car.handle_errors()
 
-            except IndexError:
-                print("Tried collision outside the tile")
+            except IndexError as s:
+                print(s.args)
+
                 continue
             #   Logic for handling errors like getting stuck in the wall
             if car_collided:
