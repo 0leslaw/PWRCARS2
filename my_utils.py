@@ -1,3 +1,4 @@
+import re
 from collections import deque
 from typing import List, Any
 import configparser
@@ -70,6 +71,49 @@ def lin_to_regulated(fun, *args):
 
 def reset_queue_to_length(point: np.ndarray, length: int) -> deque:
     return deque([point.copy() for _ in range(length)])
+
+
+def is_point_in_img_rect(dimensions, point, rectangle_top_left):
+    x, y = point
+    x1, y1 = rectangle_top_left
+    x2, y2 = rectangle_top_left + np.array([dimensions[0], dimensions[1]])
+    # Check if the point is outside the rectangle
+    if x < x1 or x > x2 or y < y1 or y > y2:
+        return False
+    else:
+        return True
+
+
+def rectangles_collide(rect1, rect2):
+    """
+    Determine if two rectangles collide.
+
+    Parameters:
+    rect1: Tuple (x1, y1, width1, height1) - Top-left corner and dimensions of the first rectangle
+    rect2: Tuple (x2, y2, width2, height2) - Top-left corner and dimensions of the second rectangle
+
+    Returns:
+    bool: True if the rectangles collide, False otherwise
+    """
+
+    x1, y1, width1, height1 = rect1
+    x2, y2, width2, height2 = rect2
+
+    # Check if one rectangle is to the left of the other
+    if x1 + width1 <= x2 or x2 + width2 <= x1:
+        return False
+
+    # Check if one rectangle is above the other
+    if y1 + height1 <= y2 or y2 + height2 <= y1:
+        return False
+
+    return True
+
+def get_single_int_from_string(s):
+    match = re.search(r'\d+', s)
+    if match:
+        return int(match.group())
+    return None
 
 # FIXME
 class VecsTest:

@@ -16,7 +16,7 @@ class SinglePlayerGame:
         my_utils.VecsTest.screen = screen
         #
 
-        player_sprite = car_sprite.Car(WIDTH / 2, HEIGHT / 2, "./textures/silver_car.png", respawn_center, respawn_tilt)
+        player_sprite = car_sprite.Car(WIDTH / 2, HEIGHT / 2, "./textures/cars/silver_car.png", respawn_center, respawn_tilt)
         self.player = player_sprite
         self.background = map_sprite.Map(players=[self.player])
         self.surface = screen.subsurface(2, 2, WIDTH - 2, HEIGHT - 2)
@@ -34,7 +34,7 @@ class SinglePlayerGame:
         my_utils.VecsTest.blit_vec()
         #
         self.player.print_status(screen)
-        globals.TICKS_PASSED += 1
+
 
 
 class SplitScreenGame:
@@ -65,6 +65,7 @@ class SplitScreenGame:
             # self.player.draw(screen)
             player.move()
         self.map.cars_collisions()
+        self.map.perks_actions()
 
 
 if __name__ == '__main__':
@@ -89,6 +90,7 @@ if __name__ == '__main__':
 
         pygame.display.update()
         clock.tick(FRAME_RATE)
+        globals.TICKS_PASSED += 1
 
 
 def draw_a_line(car: car_sprite.Car):

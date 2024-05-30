@@ -13,7 +13,7 @@ class Car(pygame.sprite.Sprite):
     def __init__(self, x_pos_on_screen, y_pos_on_screen, image_path, initial_position=np.array([0., 0.]), initial_rotation=0, keys=None):
         pygame.sprite.Sprite.__init__(self)
         if keys is None:
-            keys = {'forward': pygame.K_w, 'left': pygame.K_a, 'backward': pygame.K_s, 'right': pygame.K_d}
+            keys = {'forward': pygame.K_w, 'left': pygame.K_a, 'backward': pygame.K_s, 'right': pygame.K_d, 'release': pygame.K_q}
         print(keys)
         self.keys = keys
         self.image = pygame.image.load(image_path).convert_alpha()
@@ -31,12 +31,19 @@ class Car(pygame.sprite.Sprite):
         self.rebound_velocity = TwoDimentionalCounter(Counter("S", magnitude=0.1, max_turn=8,
                                                               normalizer_fun=my_utils.lin_to_regulated(my_utils.lin_to_exponential, 0.4, 1., 4.)))
         self.rebound_angular_vel = Counter("S", magnitude=0.02, max_turn=0.5)
+        import perks_sprites
+        self.perks = perks_sprites.PerkSet()
 
     @property
     def abs_location(self):
         """is the abstract location of the car i.e. where it would be
         if we didn't consider a player-central perspective"""
         return self.init_location + self.delta_location
+
+    def handle_perk_control(self):
+        key = pygame.key.get_pressed()
+        if key[self.keys['release']]:
+            self.perks.use_perk()
 
     def handle_steering(self):
         key = pygame.key.get_pressed()
@@ -73,6 +80,7 @@ class Car(pygame.sprite.Sprite):
         from my_engine import calculate_car_speeds
         calculate_car_speeds(self)
         self.update_path()
+        self.handle_perk_control()
 
     def update_path(self):
         self.path.popleft()

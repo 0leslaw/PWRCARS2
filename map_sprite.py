@@ -5,7 +5,7 @@ import numpy as np
 import pygame
 
 import car_sprite
-import my_utils
+from my_utils import is_point_in_img_rect
 from config_loaded import ConfigData
 from my_errors import StuckInWallError
 
@@ -16,7 +16,6 @@ class Map(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         textures_dir_path = "./textures/pwr_map/map_textures"
         self.players = players
-
         self.SCALE = 2
         self.IMG_HEIGHT, self.IMG_WIDTH = 1080 * self.SCALE, 1920 * self.SCALE
         self.images = self._load_images(textures_dir_path)
@@ -29,8 +28,10 @@ class Map(pygame.sprite.Sprite):
         # self.image_masks = [pygame.mask.from_surface(img) for img in self.image_masks]
 
         self.images_location = self._get_locations(textures_dir_path, init_map_offset)
-
         self.main_img_ind = 0
+
+        import perks_sprites
+        self.perks = [perks_sprites.MinePerk(np.array([2900., 1000.]))]
 
     @property
     def main_image(self):
@@ -125,14 +126,14 @@ class Map(pygame.sprite.Sprite):
         :return:
         """
 
-        # screen.blit(self.main_image, self.main_img_location - offset)
-        # screen.blit(self.prev_to_main_img, self.prev_to_main_img_location - offset)
-        # screen.blit(self.next_to_main_img, self.next_to_main_img_location - offset)
+        screen.blit(self.main_image, self.main_img_location - offset)
+        screen.blit(self.prev_to_main_img, self.prev_to_main_img_location - offset)
+        screen.blit(self.next_to_main_img, self.next_to_main_img_location - offset)
         #
         #   FIXME REMOVE
-        screen.blit(self.main_img_mask, self.main_img_location - offset)
-        screen.blit(self.prev_to_main_img_mask, self.prev_to_main_img_location - offset)
-        screen.blit(self.next_to_main_img_mask, self.next_to_main_img_location - offset)
+        # screen.blit(self.main_img_mask, self.main_img_location - offset)
+        # screen.blit(self.prev_to_main_img_mask, self.prev_to_main_img_location - offset)
+        # screen.blit(self.next_to_main_img_mask, self.next_to_main_img_location - offset)
         #   FIXME actually also blits the main player
         for player in self.players:
             player.draw(screen, offset)
@@ -143,6 +144,8 @@ class Map(pygame.sprite.Sprite):
         # screen.blit(other_mask.to_surface(), self.players[1].init_location + tuple(self.players[0].get_vector_to_other(self.players[1])))
         # pygame.draw.rect(screen,(255,255,0), self.players[0].rect)
         # pygame.draw.rect(screen, (255,25,0), self.players[1].rect)
+        for perk in self.perks:
+            perk.draw_on_map(screen, offset)
 
     def switch_context(self, offset):
         """switches the current context to the map to pos of the player"""
@@ -154,29 +157,21 @@ class Map(pygame.sprite.Sprite):
         :param offset: is the player position
         :return:
         """
-        if not self.is_point_in_img_rect(offset, self.images_location[self.main_img_ind]):
-            if self.is_point_in_img_rect(offset, self.images_location[self.next_img_ind(self.main_img_ind)]):
+        if not is_point_in_img_rect((self.IMG_WIDTH, self.IMG_HEIGHT), offset, self.images_location[self.main_img_ind]):
+            if is_point_in_img_rect((self.IMG_WIDTH, self.IMG_HEIGHT), offset, self.images_location[self.next_img_ind(self.main_img_ind)]):
                 print("next")
                 self.main_img_ind = self.next_img_ind(self.main_img_ind)
-            elif self.is_point_in_img_rect(offset, self.images_location[self.prev_img_ind(self.main_img_ind)]):
+            elif is_point_in_img_rect((self.IMG_WIDTH, self.IMG_HEIGHT), offset, self.images_location[self.prev_img_ind(self.main_img_ind)]):
                 self.main_img_ind = self.prev_img_ind(self.main_img_ind)
                 print("prev")
 
             else:
                 for i, location in enumerate(self.images_location):
-                    if self.is_point_in_img_rect(offset, location):
+                    if is_point_in_img_rect((self.IMG_WIDTH, self.IMG_HEIGHT), offset, location):
                         self.main_img_ind = i
 
 
-    def is_point_in_img_rect(self, point, rectangle_top_left):
-        x, y = point
-        x1, y1 = rectangle_top_left
-        x2, y2 = rectangle_top_left + np.array([self.IMG_WIDTH, self.IMG_HEIGHT])
-        # Check if the point is outside the rectangle
-        if x < x1 or x > x2 or y < y1 or y > y2:
-            return False
-        else:
-            return True
+
 
     def cars_collisions(self):
         for context_car in self.players:
@@ -214,6 +209,10 @@ class Map(pygame.sprite.Sprite):
                 print("ticks in wall count ", context_car.ticks_in_wall.count)
             else:
                 context_car.ticks_in_wall.reset()
+
+    def perks_actions(self):
+        for perks in self.perks:
+            perks.update(self)
 
     def next_img_ind(self, index):
         return index + 1 if index != len(self.images) - 1 else 0
