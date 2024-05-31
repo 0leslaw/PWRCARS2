@@ -100,6 +100,8 @@ class Perk:
 
     def check_hits(self, map: map_sprite.Map):
         for player in map.players:
+            wheels = player.get_all_wheels_abs_positions(as_arrays=False)
+            perk_vertices = self.curr_loc, self.curr_loc + (self.active_image.get_width(), )
             if my_utils.rectangles_collide((*self.curr_loc, self.active_image.get_width(), self.active_image.get_height()),
                                            (*player.abs_location, player.rect.width, player.rect.height)):
                 self.hit_action(player)
@@ -174,12 +176,12 @@ class MinePerk(Perk, ABC):
 
         if self.state == PerkState.PASSED:
             ste = self.owner.steerwheel_turn_extent
-            if self.state_change_period() < 5:
+            if self.state_change_period() < 3:
                 if ste.count > 0:
                     ste.set_to_max()
                 else:
                     ste.set_to_min()
-            if self.state_change_period() == 5:
+            if self.state_change_period() == 3:
                 ste.max_turn /= 3
             if self.state_change_period() > self.explosion_duration_in_ticks:
                 print("PASSED")

@@ -115,6 +115,41 @@ def get_single_int_from_string(s):
         return int(match.group())
     return None
 
+
+def project_polygon(vertices, axis):
+    """Project polygon vertices onto an axis and return the min and max projection values."""
+    dots = [np.dot(vertex, axis) for vertex in vertices]
+    return min(dots), max(dots)
+
+
+def get_axes(vertices):
+    """Get all axes (normal vectors to edges) of the polygon."""
+    axes = []
+    for i in range(len(vertices)):
+        p1 = vertices[i]
+        p2 = vertices[(i + 1) % len(vertices)]
+        edge = np.subtract(p2, p1)
+        normal = np.array([-edge[1], edge[0]])  # Perpendicular to the edge
+        axes.append(normal / np.linalg.norm(normal))
+    return axes
+
+
+def rotated_rectangles_intersect(vertices1, vertices2):
+    """Check if two rectangles intersect using the Separating Axis Theorem."""
+    axes1 = get_axes(vertices1)
+    axes2 = get_axes(vertices2)
+
+    axes = axes1 + axes2
+
+    for axis in axes:
+        min1, max1 = project_polygon(vertices1, axis)
+        min2, max2 = project_polygon(vertices2, axis)
+        if max1 < min2 or max2 < min1:
+            return False
+
+    return True
+
+
 # FIXME
 class VecsTest:
     screen = None
