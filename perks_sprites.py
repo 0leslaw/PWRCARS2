@@ -78,7 +78,7 @@ class Perk:
     def check_pickups(self, map: map_sprite.Map):
         for player in map.players:
             print("CHECKING PICKUP")
-            if my_utils.rectangles_collide((*self.curr_loc, self.active_image.get_width(), self.active_image.get_height()),
+            if my_utils.rectangles_collide((*self.curr_loc, self.laying_image.get_width(), self.laying_image.get_height()),
                                            (*player.abs_location, player.rect.width, player.rect.height))\
                     and player.perks.not_full():
                 player.perks.add_perk(self)
