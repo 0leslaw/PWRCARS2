@@ -4,6 +4,36 @@ from typing import Tuple, Any
 import configparser
 
 
+def set_config_for_game(settings):
+    # Read the configuration file
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    # Modify the configuration
+    config['game_init']['game_mode'] = settings['game_mode']
+    config['player_1']['car_texture'] = settings['player_1']
+    if 'player_2'in settings:
+        config['player_2']['car_texture'] = settings['player_2']
+
+    # Write the modified configuration back to the file
+    with open('config.ini', 'w') as configfile:
+        config.write(configfile)
+
+    ConfigData._update_config()
+
+
+def update_car_config(player_car):
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    # Modify the configuration
+
+    config[player_car[0]]['car_texture'] = player_car[1]
+
+    # Write the modified configuration back to the file
+    with open('config.ini', 'w') as configfile:
+        config.write(configfile)
+
 def mask_color(config: configparser.ConfigParser) -> Tuple[int, ...]:
     return tuple(map(int, config['special_colors']['mask_color'].split(', ')))
 
@@ -34,7 +64,8 @@ def read_config():
             'name': config['player_2']['name'],
             'keys': ast.literal_eval(config['player_2']['keys']),
             'car_texture': config['player_2']['car_texture']
-        }
+        },
+        'car_textures_dir': config['textures']['car_textures_dir']
     }
 
 
@@ -52,6 +83,10 @@ class ConfigData:
         if cls._config_dict is None:
             cls._config_dict = read_config()
         return cls._config_dict
+
+    @classmethod
+    def _update_config(cls):
+        cls._config_dict = read_config()
 
     @classmethod
     def get_attr(cls, attr_name: str) -> Any:
