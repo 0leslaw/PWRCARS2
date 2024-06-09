@@ -100,8 +100,8 @@ class Car(pygame.sprite.Sprite):
 
     def handle_errors(self):
         self.ticks_in_wall.reset()
-        self.delta_location = np.array([1800., 900.])
-        # self.delta_location = self.path[0].copy()
+        # self.delta_location = np.array([1800., 900.])
+        self.delta_location = self.path[0].copy()
         print("THERE HAS BEEN AN ERROR, THE PLAYER HAS BEEN RETURNED TO PREV LOC")
         self.path = my_utils.reset_queue_to_length(self.path[0].copy(), len(self.path))
         self.reset_dynamics()

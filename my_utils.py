@@ -37,6 +37,8 @@ def point_collides(mask, point):
 
 
 def get_unit_vector(vec: np.ndarray):
+    if np.linalg.norm(vec) == 0:
+        raise ZeroDivisionError('get_unit_vector zero division fail')
     return vec / np.linalg.norm(vec)
 
 

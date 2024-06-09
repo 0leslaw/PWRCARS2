@@ -204,7 +204,7 @@ class Map(pygame.sprite.Sprite):
                         handle_map_collision(context_car, car_wheels[i].astype(int), self)
                     except StuckInWallError:
                         context_car.handle_errors()
-                    except (RuntimeWarning, Exception):
+                    except (ZeroDivisionError, Exception):
                         context_car.handle_errors()
                         print("Math problems due to unexpected behaviour")
 
