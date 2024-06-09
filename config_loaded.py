@@ -10,6 +10,7 @@ def set_config_for_game(settings):
     config.read('config.ini')
 
     # Modify the configuration
+    config['game_init']['laps'] = settings['laps']
     config['game_init']['game_mode'] = settings['game_mode']
     config['player_1']['car_texture'] = settings['player_1']
     if 'player_2'in settings:
@@ -55,6 +56,7 @@ def read_config():
         'colors': load_config_to_name2int_tuple_dict(config, 'ordinary_colors'),
         'game_mode': config['game_init']['game_mode'],
         'num_of_players': int(config['game_init']['num_of_players']),
+        'laps': int(config['game_init']['laps']),
         'player1': {
             'name': config['player_1']['name'],
             'keys': ast.literal_eval(config['player_1']['keys']),

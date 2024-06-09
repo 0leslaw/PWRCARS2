@@ -18,6 +18,7 @@ class PerkSet:
         self.perks: list[Perk] = []
         self.chosen = 0
         self.limit = limit
+        self.tick_of_last_release = 0
 
     def not_full(self):
         return len(self.perks) < self.limit
@@ -35,13 +36,13 @@ class PerkSet:
         self.chosen = max(self.chosen - 1, 0)
 
     def use_perk(self):
-        if len(self.perks) != 0:
-            used = self.perks.pop(self.chosen)
-            used.release()
-            self.dec_pos()
-
-    def draw(self, screen):
-        pass
+        # FIXME patch for the faulty key press detection system of pygame
+        if globals.TICKS_PASSED - self.tick_of_last_release > 5:
+            if len(self.perks) != 0:
+                self.tick_of_last_release = globals.TICKS_PASSED
+                used = self.perks.pop(self.chosen)
+                used.release()
+                self.dec_pos()
 
 
 class PerkState(Enum):
@@ -77,7 +78,6 @@ class Perk:
 
     def check_pickups(self, map: map_sprite.Map):
         for player in map.players:
-            print("CHECKING PICKUP")
             if my_utils.rectangles_collide((*self.curr_loc, self.laying_image.get_width(), self.laying_image.get_height()),
                                            (*player.abs_location, player.rect.width, player.rect.height))\
                     and player.perks.not_full():
@@ -165,14 +165,11 @@ class MinePerk(Perk, ABC):
         screen.blit(self.hit_images[chosen_ind], self.curr_loc - offset)
 
     def update(self, map: map_sprite.Map):
-        print("UPDATE")
         if self.state == PerkState.LAYING:
             self.check_pickups(map)
-            print("LAYING")
 
         if self.state == PerkState.ACTIVE:
             self.check_hits(map)
-            print("ACTIVE")
 
         if self.state == PerkState.PASSED:
             ste = self.owner.steerwheel_turn_extent
@@ -184,5 +181,4 @@ class MinePerk(Perk, ABC):
             if self.state_change_period() == 3:
                 ste.max_turn /= 3
             if self.state_change_period() > self.explosion_duration_in_ticks:
-                print("PASSED")
                 self.reset()

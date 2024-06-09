@@ -5,6 +5,7 @@ from typing import Dict
 import pygame
 import numpy as np
 
+import globals
 import my_utils
 from counter import *
 
@@ -14,12 +15,11 @@ class Car(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         if keys is None:
             keys = {'forward': pygame.K_w, 'left': pygame.K_a, 'backward': pygame.K_s, 'right': pygame.K_d, 'release': pygame.K_q}
-        print(keys)
         self.keys = keys
         self.image = pygame.image.load(image_path).convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(center=(x_pos_on_screen, y_pos_on_screen))
-        self.path = my_utils.reset_queue_to_length(np.array([0., 0.]), 20)
+        self.path: deque = my_utils.reset_queue_to_length(initial_position, 20)
         self.ticks_in_wall = Counter("S", max_turn=5)
         self.delta_location: np.ndarray = initial_position
         self.init_location: np.ndarray = np.array([x_pos_on_screen, y_pos_on_screen])
@@ -33,12 +33,23 @@ class Car(pygame.sprite.Sprite):
         self.rebound_angular_vel = Counter("S", magnitude=0.02, max_turn=0.5)
         import perks_sprites
         self.perks = perks_sprites.PerkSet()
+        self.visited_tiles_indices = [0]
+        self.time_of_laps_completion = []
 
     @property
     def abs_location(self):
         """is the abstract location of the car i.e. where it would be
         if we didn't consider a player-central perspective"""
         return self.init_location + self.delta_location
+
+    def add_visited_tile(self, tile_ind, tile_count):
+        if tile_ind not in self.visited_tiles_indices:
+            self.visited_tiles_indices.append(tile_ind)
+            print(self.visited_tiles_indices)
+            if len(self.visited_tiles_indices) == tile_count:
+                self.visited_tiles_indices = []
+                self.time_of_laps_completion.append(globals.TICKS_PASSED * globals.FRAME_RATE)
+                print("next lap")
 
     def handle_perk_control(self):
         key = pygame.key.get_pressed()
@@ -47,7 +58,6 @@ class Car(pygame.sprite.Sprite):
 
     def handle_steering(self):
         key = pygame.key.get_pressed()
-        absolute_vel_change_vec = np.ndarray([0, 0])
 
         self.longitudinal_speed.state = "S"
         self.steerwheel_turn_extent.state = "S"
@@ -75,7 +85,6 @@ class Car(pygame.sprite.Sprite):
         self.steerwheel_turn_extent.two_side_scale_update(5)
 
     def move(self):
-        # self.handle_collisions(rigid_bodies)
         self.handle_steering()
         from my_engine import calculate_car_speeds
         calculate_car_speeds(self)
@@ -83,27 +92,32 @@ class Car(pygame.sprite.Sprite):
         self.handle_perk_control()
 
     def update_path(self):
-        self.path.popleft()
-        self.path.append(self.delta_location)
-        if self.ticks_in_wall.count == self.ticks_in_wall.max_turn:
-            self.handle_errors()
+        if globals.TICKS_PASSED % 10 == 0:
+            self.path.popleft()
+            self.path.append(self.delta_location.copy())
+            if self.ticks_in_wall.count == self.ticks_in_wall.max_turn:
+                self.handle_errors()
 
     def handle_errors(self):
         self.ticks_in_wall.reset()
-        self.delta_location = self.path.popleft()
-        self.path.append(np.array(self.delta_location))
-        print("error razy w tym ścianu")
-        self.path = my_utils.reset_queue_to_length(self.delta_location, len(self.path))
+        self.delta_location = np.array([1800., 900.])
+        # self.delta_location = self.path[0].copy()
+        print("THERE HAS BEEN AN ERROR, THE PLAYER HAS BEEN RETURNED TO PREV LOC")
+        self.path = my_utils.reset_queue_to_length(self.path[0].copy(), len(self.path))
+        self.reset_dynamics()
 
     def reset_dynamics(self):
-        self.velocity = np.ndarray([0, 0])
+        self.velocity[0] = 0
+        self.velocity[1] = 0
         self.rotation_speed = 0
         self.longitudinal_speed.reset()
         self.rebound_velocity.reset()
+        print(self.delta_location)
 
     def print_status(self, screen):
-        font = pygame.font.Font(None, 36)  # None means default system font, 36 is the font size
-        message = self.delta_location.__str__() + self.longitudinal_speed.count.__str__()
+        font = pygame.font.SysFont('Courier New', 36)
+        message = (f'location:{np.round(self.delta_location[0], 2):<10}, {np.round(self.delta_location[1], 2):<10}'
+                   f' speed:{np.round(self.longitudinal_speed.count, 2)}')
         # Render the text onto a surface
         text_surface = font.render(message, 0,
                                    (255, 255, 255))  # True enables anti-aliasing, (255, 255, 255) is white color
@@ -118,7 +132,7 @@ class Car(pygame.sprite.Sprite):
             rec = rotated_img.get_rect(center=self.rect.center)
         self.rect = rec
         screen.blit(rotated_img, rec)
-        self.draw_wheel_trail(screen)
+        # self.draw_wheel_trail(screen)
         #   FIXME REMOVE
         #
         my_utils.VecsTest.vecs['velocity'] = self.velocity

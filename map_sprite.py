@@ -1,3 +1,4 @@
+import ast
 import os
 from typing import List
 
@@ -5,6 +6,7 @@ import numpy as np
 import pygame
 
 import car_sprite
+import globals
 from my_utils import is_point_in_img_rect
 from config_loaded import ConfigData
 from my_errors import StuckInWallError
@@ -12,7 +14,7 @@ from my_errors import StuckInWallError
 
 class Map(pygame.sprite.Sprite):
 
-    def __init__(self, players: List[car_sprite.Car], init_map_offset=np.array([0, 0])):
+    def __init__(self, players: List[car_sprite.Car], init_map_offset=np.array([0, 0]), show_perks=True):
         pygame.sprite.Sprite.__init__(self)
         textures_dir_path = "./textures/pwr_map/map_textures"
         self.players = players
@@ -31,7 +33,11 @@ class Map(pygame.sprite.Sprite):
         self.main_img_ind = 0
 
         import perks_sprites
-        self.perks = [perks_sprites.MinePerk(np.array([2900., 1000.]))]
+        # self.perks = [perks_sprites.MinePerk(np.array([2900., 1000.]))]
+        if show_perks:
+            self.perks = [perks_sprites.MinePerk(loc) for loc in globals.ON_MAP_POINTS]
+        else:
+            self.perks = []
 
     @property
     def main_image(self):
@@ -147,31 +153,29 @@ class Map(pygame.sprite.Sprite):
         for perk in self.perks:
             perk.draw_on_map(screen, offset)
 
-    def switch_context(self, offset):
+    def switch_context(self, player):
         """switches the current context to the map to pos of the player"""
-        self.update_main_image(offset)
+        self.update_main_image(player)
 
-    def update_main_image(self, offset):
+    def update_main_image(self, player: car_sprite.Car):
         """
         Updates the index of the main image
-        :param offset: is the player position
-        :return:
+        :param player: is the player in question
+        :return: if was updated
         """
+        offset = player.abs_location
         if not is_point_in_img_rect((self.IMG_WIDTH, self.IMG_HEIGHT), offset, self.images_location[self.main_img_ind]):
+            # went into the next one
             if is_point_in_img_rect((self.IMG_WIDTH, self.IMG_HEIGHT), offset, self.images_location[self.next_img_ind(self.main_img_ind)]):
-                print("next")
                 self.main_img_ind = self.next_img_ind(self.main_img_ind)
+            # went into the prev one
             elif is_point_in_img_rect((self.IMG_WIDTH, self.IMG_HEIGHT), offset, self.images_location[self.prev_img_ind(self.main_img_ind)]):
                 self.main_img_ind = self.prev_img_ind(self.main_img_ind)
-                print("prev")
 
             else:
                 for i, location in enumerate(self.images_location):
                     if is_point_in_img_rect((self.IMG_WIDTH, self.IMG_HEIGHT), offset, location):
                         self.main_img_ind = i
-
-
-
 
     def cars_collisions(self):
         for context_car in self.players:
@@ -184,13 +188,15 @@ class Map(pygame.sprite.Sprite):
                             from my_engine import handle_cars_collision
                             handle_cars_collision(context_car, car)
 
+    def check_car_progress_on_map(self, player: car_sprite.Car):
+        player.add_visited_tile(self.main_img_ind, len(self.images_location))
+
     def track_boundries_collisions(self, context_car: car_sprite.Car):
         """this depends on the context, since for every car there are different boundries"""
         from my_engine import handle_map_collision
         car_wheels = context_car.get_all_wheels_abs_positions(as_arrays=True)
         car_collided = False
         for i, wheel in enumerate(car_wheels):
-            # print(car_wheels[i].astype(int))
             try:
                 if self.get_pixel_from_mask_map(car_wheels[i]) == ConfigData.get_attr('mask_color'):
                     car_collided = True
@@ -198,10 +204,12 @@ class Map(pygame.sprite.Sprite):
                         handle_map_collision(context_car, car_wheels[i].astype(int), self)
                     except StuckInWallError:
                         context_car.handle_errors()
+                    except (RuntimeWarning, Exception):
+                        context_car.handle_errors()
+                        print("Math problems due to unexpected behaviour")
 
             except IndexError as s:
                 print(s.args)
-
                 continue
             #   Logic for handling errors like getting stuck in the wall
             if car_collided:
@@ -221,7 +229,7 @@ class Map(pygame.sprite.Sprite):
         return index - 1 if index != 0 else len(self.images) - 1
 
     def get_pixel_from_mask_map(self, point: np.ndarray):
-        #   try except instead of ifs for faster execution
+        #   try except instead of ifs for faster execution assuming it will break rarely
         try:
             the_pixel = self.main_img_mask.get_at(point.astype(int) - self.main_img_location)
         except IndexError:

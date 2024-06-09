@@ -64,8 +64,10 @@ class PlayerSelectionWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Player Selection")
+        self.setWindowTitle("PWR CARS 2")
         self.setGeometry(100, 100, 400, 300)
+
+        self.lap_count = 1
 
         layout = QVBoxLayout()
 
@@ -78,6 +80,20 @@ class PlayerSelectionWindow(QWidget):
         self.tab_widget.addTab(self.single_player_panel, "Single Player")
         self.tab_widget.addTab(self.two_player_panel, "Two Player")
 
+        # Adding the Lap Toggler
+        lap_toggler_layout = QHBoxLayout()
+        self.lap_label = QLabel(f"Laps: {self.lap_count}")
+        lap_toggler_layout.addWidget(self.lap_label)
+
+        self.decrement_lap_button = QPushButton("-")
+        self.decrement_lap_button.clicked.connect(self.decrement_lap_count)
+        lap_toggler_layout.addWidget(self.decrement_lap_button)
+
+        self.increment_lap_button = QPushButton("+")
+        self.increment_lap_button.clicked.connect(self.increment_lap_count)
+        lap_toggler_layout.addWidget(self.increment_lap_button)
+
+        layout.addLayout(lap_toggler_layout)
 
         # Adding the Start button
         self.start_button = QPushButton("Start")
@@ -111,12 +127,22 @@ class PlayerSelectionWindow(QWidget):
 
         return panel
 
+    def increment_lap_count(self):
+        self.lap_count += 1
+        self.lap_label.setText(f"Laps: {self.lap_count}")
+
+    def decrement_lap_count(self):
+        if self.lap_count > 1:
+            self.lap_count -= 1
+            self.lap_label.setText(f"Laps: {self.lap_count}")
+
     def start_game(self):
         settings_dict = {}
 
         current_index = self.tab_widget.currentIndex()
         current_tab_name = self.tab_widget.tabText(current_index)
         settings_dict['game_mode'] = current_tab_name
+        settings_dict['laps'] = str(self.lap_count)
 
         # this is the panel
         current = self.tab_widget.currentWidget()

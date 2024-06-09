@@ -167,9 +167,8 @@ class VecsTest:
         pygame.draw.rect(VecsTest.screen, (0, 0, 0, 255), pygame.Rect(0, 0, 300, font_size * len(VecsTest.vecs)))
         for i, (name, vec) in enumerate(VecsTest.vecs.items()):
             curr_color = VecsTest.colors[i]
+            text_surface = font.render(name, 0, curr_color)
             #   blit the name
-            text_surface = font.render(name, 0,
-                                       curr_color)
             VecsTest.screen.blit(text_surface, (i, i * font_size))
             # blit the vector
             pygame.draw.line(VecsTest.screen, curr_color, VecsTest.vecs_origin, VecsTest.vecs_origin + vec, 2)
