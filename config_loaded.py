@@ -1,5 +1,4 @@
 import ast
-from dataclasses import dataclass
 from typing import Tuple, Any
 import configparser
 

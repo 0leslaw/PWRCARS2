@@ -3,12 +3,29 @@ import sys
 import config_loaded
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QHBoxLayout, QPushButton, QApplication, QTabWidget)
 from PySide6.QtGui import QPixmap, Qt
-
 import game
 
 
 class PlayerChoosingWidget(QWidget):
+    """
+    Widget for choosing a player and selecting car textures.
+
+    Attributes:
+        player_name (str): The name of the player.
+        car_textures (list): List of paths to car texture images.
+        current_texture_index (int): Index of the currently selected car texture.
+        name_label (QLabel): Label for displaying the player's name.
+        texture_label (QLabel): Label for displaying the selected car texture.
+        previous_texture_button (QPushButton): Button for selecting the previous car texture.
+        next_texture_button (QPushButton): Button for selecting the next car texture.
+    """
     def __init__(self, player_name):
+        """
+        Initialize the PlayerChoosingWidget.
+
+        Args:
+            player_name (str): The name of the player.
+        """
         super().__init__()
 
         self.player_name = player_name
@@ -44,24 +61,46 @@ class PlayerChoosingWidget(QWidget):
 
     @property
     def current_texture(self):
+        """
+        str: The path to the currently selected car texture image.
+        """
         return self.car_textures[self.current_texture_index]
 
     def update_texture_display(self):
+        """
+        Update the texture label to display the currently selected car texture.
+        """
         pixmap = QPixmap(self.car_textures[self.current_texture_index])
         pixmap = pixmap.scaled(self.texture_label.size(), Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.FastTransformation)  # Scale pixmap to fit label
         self.texture_label.setPixmap(pixmap)
 
     def show_previous_texture(self):
+        """Select the previous car texture."""
         self.current_texture_index = (self.current_texture_index - 1) % len(self.car_textures)
         self.update_texture_display()
 
     def show_next_texture(self):
+        """Select the next car texture."""
         self.current_texture_index = (self.current_texture_index + 1) % len(self.car_textures)
         self.update_texture_display()
 
 
 class PlayerSelectionWindow(QWidget):
+    """
+    Window for selecting players and game settings before starting the game.
+
+    Attributes:
+        lap_count (int): The number of laps for the game.
+        lap_label (QLabel): Label for displaying the lap count.
+        decrement_lap_button (QPushButton): Button for decrementing the lap count.
+        increment_lap_button (QPushButton): Button for incrementing the lap count.
+        start_button (QPushButton): Button for starting the game.
+        tab_widget (QTabWidget): Widget for displaying tabs for single and two player modes.
+        single_player_panel (QWidget): Panel for selecting settings in single player mode.
+        two_player_panel (QWidget): Panel for selecting settings in two player mode.
+    """
     def __init__(self):
+        """Initialize the PlayerSelectionWindow."""
         super().__init__()
 
         self.setWindowTitle("PWR CARS 2")
@@ -104,6 +143,12 @@ class PlayerSelectionWindow(QWidget):
         self.setLayout(layout)
 
     def create_single_player_panel(self):
+        """
+        Create the panel for selecting settings in single player mode.
+
+        Returns:
+            QWidget: The single player panel.
+        """
         panel = QWidget()
         layout = QHBoxLayout()
 
@@ -114,6 +159,12 @@ class PlayerSelectionWindow(QWidget):
         return panel
 
     def create_two_player_panel(self):
+        """
+        Create the panel for selecting settings in two player mode.
+
+        Returns:
+            QWidget: The two player panel.
+        """
         panel = QWidget()
         layout = QHBoxLayout()
 
@@ -128,15 +179,18 @@ class PlayerSelectionWindow(QWidget):
         return panel
 
     def increment_lap_count(self):
+        """Increment the lap count."""
         self.lap_count += 1
         self.lap_label.setText(f"Laps: {self.lap_count}")
 
     def decrement_lap_count(self):
+        """Decrement the lap count."""
         if self.lap_count > 1:
             self.lap_count -= 1
             self.lap_label.setText(f"Laps: {self.lap_count}")
 
     def start_game(self):
+        """Start the game with selected settings."""
         settings_dict = {}
 
         current_index = self.tab_widget.currentIndex()

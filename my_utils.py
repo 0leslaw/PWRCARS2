@@ -1,23 +1,18 @@
+import math
 import re
 from collections import deque
-from typing import List, Any
-import configparser
 import numpy as np
 import pygame
 from config_loaded import ConfigData
 
 
 def same_sign(num1, num2):
-    # Przesunięcie bitowe o 31 bity w lewo - dostaniemy 1 dla liczby ujemnej i 0 dla liczby nieujemnej
-    # sign1 = (num1 >> 31) & 1
-    # sign2 = (num2 >> 31) & 1
+
     sign1 = np.sign(num1)
     sign2 = np.sign(num2)
-    # Porównanie bitów znaku
     return sign1 == sign2
 
 
-# Define a function to rotate a vector
 def rotate_vector(vector, angle_radians):
     # Define the rotation matrix
     rotation_matrix = np.array([[np.cos(angle_radians), -np.sin(angle_radians)],
@@ -27,13 +22,6 @@ def rotate_vector(vector, angle_radians):
     rotated_vector = np.dot(rotation_matrix, vector)
 
     return rotated_vector
-
-
-def point_collides(mask, point):
-    #   if alpha is non zero there is a collision
-    print(mask.get_at(point))
-
-    return mask.get_at(point) != 1
 
 
 def get_unit_vector(vec: np.ndarray):
@@ -134,6 +122,22 @@ def get_axes(vertices):
         normal = np.array([-edge[1], edge[0]])  # Perpendicular to the edge
         axes.append(normal / np.linalg.norm(normal))
     return axes
+
+
+def draw_a_line(car, screen):
+    # Calculate the end points of the line
+
+    length = 20
+    start_point = (40, 40)
+    angle_radians = car.rotation - math.pi/2
+    end_point = (start_point[0] + length * math.cos(angle_radians),
+                 start_point[1] + length * math.sin(angle_radians))
+
+    # Set the color of the line (RGB)
+    line_color = (255, 0, 0)
+
+    # Draw the line
+    pygame.draw.line(screen, line_color, start_point, end_point, 2)
 
 
 def rotated_rectangles_intersect(vertices1, vertices2):

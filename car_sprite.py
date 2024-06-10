@@ -1,10 +1,6 @@
-import math
 from collections import deque
-from email.mime import image
-from typing import Dict
 import pygame
 import numpy as np
-
 import globals
 import my_utils
 from counter import *
@@ -12,6 +8,17 @@ from counter import *
 
 class Car(pygame.sprite.Sprite):
     def __init__(self, x_pos_on_screen, y_pos_on_screen, image_path, initial_position=np.array([0., 0.]), initial_rotation=0, keys=None):
+        """
+        Initialize a Car instance.
+
+        Args:
+            x_pos_on_screen (int): The x position on the screen.
+            y_pos_on_screen (int): The y position on the screen.
+            image_path (str): Path to the car image.
+            initial_position (np.ndarray, optional): Initial position of the car. Defaults to np.array([0., 0.]).
+            initial_rotation (int, optional): Initial rotation of the car. Defaults to 0.
+            keys (dict, optional): Dictionary of keys for car controls. Defaults to None.
+        """
         pygame.sprite.Sprite.__init__(self)
         if keys is None:
             keys = {'forward': pygame.K_w, 'left': pygame.K_a, 'backward': pygame.K_s, 'right': pygame.K_d, 'release': pygame.K_q}
@@ -38,11 +45,22 @@ class Car(pygame.sprite.Sprite):
 
     @property
     def abs_location(self):
-        """is the abstract location of the car i.e. where it would be
-        if we didn't consider a player-central perspective"""
+        """
+        Get the absolute location of the car, considering a player-central perspective.
+
+        Returns:
+            np.ndarray: The absolute location of the car.
+        """
         return self.init_location + self.delta_location
 
     def add_visited_tile(self, tile_ind, tile_count):
+        """
+        Add a tile index to the list of visited tiles and handle lap completion.
+
+        Args:
+            tile_ind (int): The index of the tile.
+            tile_count (int): The total number of tiles.
+        """
         if tile_ind not in self.visited_tiles_indices:
             self.visited_tiles_indices.append(tile_ind)
             print(self.visited_tiles_indices)
@@ -52,17 +70,23 @@ class Car(pygame.sprite.Sprite):
                 print("next lap")
 
     def handle_perk_control(self):
+        """
+        Handle the control of perks by the player.
+        """
         key = pygame.key.get_pressed()
         if key[self.keys['release']]:
             self.perks.use_perk()
 
     def handle_steering(self):
+        """
+        Handle the steering controls of the car.
+        """
         key = pygame.key.get_pressed()
 
         self.longitudinal_speed.state = "S"
         self.steerwheel_turn_extent.state = "S"
 
-        #   handle forward backward
+        # Handle forward and backward movement
         if key[self.keys['forward']] is True:
             self.longitudinal_speed.state = "R"
         elif key[self.keys['backward']] is True:
@@ -70,7 +94,7 @@ class Car(pygame.sprite.Sprite):
         else:
             self.longitudinal_speed.state = "S"
 
-        #   handle left to right
+        # Handle left and right movement
         flag_for_both = False
         if key[self.keys['left']] is True:
             self.steerwheel_turn_extent.state = "L"
@@ -85,6 +109,9 @@ class Car(pygame.sprite.Sprite):
         self.steerwheel_turn_extent.two_side_scale_update(5)
 
     def move(self):
+        """
+        Move the car based on the current steering and speed.
+        """
         self.handle_steering()
         from my_engine import calculate_car_speeds
         calculate_car_speeds(self)
@@ -92,6 +119,9 @@ class Car(pygame.sprite.Sprite):
         self.handle_perk_control()
 
     def update_path(self):
+        """
+        Update the list of past locations of the car.
+        """
         if globals.TICKS_PASSED % 10 == 0:
             self.path.popleft()
             self.path.append(self.delta_location.copy())
@@ -99,14 +129,19 @@ class Car(pygame.sprite.Sprite):
                 self.handle_errors()
 
     def handle_errors(self):
+        """
+        Handle errors when the car gets stuck or encounters an issue.
+        """
         self.ticks_in_wall.reset()
-        # self.delta_location = np.array([1800., 900.])
         self.delta_location = self.path[0].copy()
         print("THERE HAS BEEN AN ERROR, THE PLAYER HAS BEEN RETURNED TO PREV LOC")
         self.path = my_utils.reset_queue_to_length(self.path[0].copy(), len(self.path))
         self.reset_dynamics()
 
     def reset_dynamics(self):
+        """
+        Reset the dynamics of the car (velocity, rotation, etc.).
+        """
         self.velocity[0] = 0
         self.velocity[1] = 0
         self.rotation_speed = 0
@@ -115,6 +150,12 @@ class Car(pygame.sprite.Sprite):
         print(self.delta_location)
 
     def print_status(self, screen):
+        """
+        Print the current status of the car on the screen.
+
+        Args:
+            screen (pygame.Surface): The screen surface to print on.
+        """
         font = pygame.font.SysFont('Courier New', 36)
         message = (f'location:{np.round(self.delta_location[0], 2):<10}, {np.round(self.delta_location[1], 2):<10}'
                    f' speed:{np.round(self.longitudinal_speed.count, 2)}')
@@ -124,6 +165,13 @@ class Car(pygame.sprite.Sprite):
         screen.blit(text_surface, (10, 10))
 
     def draw(self, screen, context_player_delta_loc=None):
+        """
+        Draw the car on the screen.
+
+        Args:
+            screen (pygame.Surface): The screen surface to draw on.
+            context_player_delta_loc (np.ndarray, optional): The delta location of the context player. Defaults to None.
+        """
         rot_in_degrees = np.degrees(-self.rotation)
         rotated_img = pygame.transform.rotate(self.image, rot_in_degrees)
         if context_player_delta_loc is not None:
@@ -133,26 +181,43 @@ class Car(pygame.sprite.Sprite):
         self.rect = rec
         screen.blit(rotated_img, rec)
         # self.draw_wheel_trail(screen)
-        #   FIXME REMOVE
-        #
+        # FIXME REMOVE
         my_utils.VecsTest.vecs['velocity'] = self.velocity
 
-        #
-
     def get_vector_to_other(self, other):
+        """
+        Get the vector from this car to another car.
+
+        Args:
+            other (Car): The other car.
+
+        Returns:
+            np.ndarray: The vector to the other car.
+        """
         return other.delta_location - self.delta_location
 
     def draw_wheel_trail(self, screen):
-        #   TODO
+        """
+        Draw the wheel trail of the car on the screen.
+        """
+        # TODO
         left_wheel_pos, right_wheel_pos = self.get_wheels_rel_to_mid(is_back_wheels=True)
         pygame.draw.circle(screen, center=left_wheel_pos, color=(0, 0, 0), radius=2)
         pass
 
     def get_wheel_pos_rel_to_car(self, is_back_wheels=True):
+        """
+        Get the position of the wheels relative to the car.
+
+        Args:
+            is_back_wheels (bool, optional): Whether to get the back wheels. Defaults to True.
+
+        Returns:
+            tuple: The positions of the left and right wheels.
+        """
         real_distance_scaler = 0.85
-        h = self.image.get_height()/2 * real_distance_scaler
-        a = self.image.get_width()/2 * real_distance_scaler
-        # print(self.image.get_height())
+        h = self.image.get_height() / 2 * real_distance_scaler
+        a = self.image.get_width() / 2 * real_distance_scaler
         if not is_back_wheels:
             h = -h
         left_wheel_pos = (a, h)
@@ -161,10 +226,14 @@ class Car(pygame.sprite.Sprite):
 
     def get_wheels_rel_to_mid(self, is_back_wheels=True, as_arrays=False):
         """
-        get wheel position relative to car initial location rotated
-        :param as_arrays:
-        :param is_back_wheels:
-        :return:
+        Get the wheel positions relative to the car's midpoint.
+
+        Args:
+            is_back_wheels (bool, optional): Whether to get the back wheels. Defaults to True.
+            as_arrays (bool, optional): Whether to return the positions as arrays. Defaults to False.
+
+        Returns:
+            tuple: The positions of the left and right wheels.
         """
         relative_left_wheel_pos, relative_right_wheel_pos = self.get_wheel_pos_rel_to_car(is_back_wheels)
         r_l_vec = np.array(relative_left_wheel_pos)
@@ -178,10 +247,27 @@ class Car(pygame.sprite.Sprite):
             return r_l_vec, r_r_vec
 
     def get_all_wheels_positions(self, as_arrays=True):
+        """
+        Get the positions of all wheels relative to the car's midpoint.
+
+        Args:
+            as_arrays (bool, optional): Whether to return the positions as arrays. Defaults to True.
+
+        Returns:
+            tuple: The positions of all wheels.
+        """
         return *self.get_wheels_rel_to_mid(as_arrays=as_arrays), *self.get_wheels_rel_to_mid(is_back_wheels=False, as_arrays=as_arrays)
 
     def get_all_wheels_abs_positions(self, as_arrays=True):
-        """returns the absolute abstract positions of the wheels in order LB, RB, LF, RF"""
+        """
+        Get the absolute positions of all wheels.
+
+        Args:
+            as_arrays (bool, optional): Whether to return the positions as arrays. Defaults to True.
+
+        Returns:
+            tuple: The absolute positions of all wheels.
+        """
         left_back, right_back = self.get_wheels_rel_to_mid(as_arrays=True)
         left_front, right_front = self.get_wheels_rel_to_mid(is_back_wheels=False, as_arrays=True)
         if as_arrays:
@@ -190,5 +276,3 @@ class Car(pygame.sprite.Sprite):
         else:
             return (tuple(left_back + self.delta_location), tuple(right_back + self.delta_location),
                     tuple(left_front + self.delta_location), tuple(right_front + self.delta_location))
-
-    

@@ -4,6 +4,11 @@ from PIL import Image
 
 import my_utils
 
+"""
+    this class' purpose is solely to preprocess the images
+    for use in the game
+"""
+
 
 def process_image(input_path, output_path):
     # Open the image
@@ -97,4 +102,5 @@ def make_my_masks():
 
 
 if __name__ == '__main__':
-    make_my_masks()
+    pass
+    # make_my_masks()

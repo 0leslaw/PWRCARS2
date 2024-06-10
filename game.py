@@ -3,7 +3,6 @@ from sys import exit
 import car_sprite, map_sprite
 import math
 import numpy as np
-
 import globals
 import my_utils
 from config_loaded import ConfigData
@@ -14,6 +13,14 @@ FRAME_RATE = 30
 
 class SinglePlayerGame:
     def __init__(self, respawn_center, respawn_tilt, screen, laps):
+        """Initialize a SinglePlayerGame instance.
+
+        Args:
+            respawn_center (np.ndarray): The respawn center coordinates.
+            respawn_tilt (float): The respawn tilt angle.
+            screen (pygame.Surface): The screen to render the game.
+            laps (int): The number of laps for the game.
+        """
         self.screen = screen
 
         # FIXME REMOVE THIS AFTER PRODUCTION
@@ -28,7 +35,7 @@ class SinglePlayerGame:
         self.laps = laps
 
     def run(self):
-        # self.handle_background()
+        """Run the game loop for single player mode."""
         self.screen.fill((0, 0, 0))
         self.background.track_boundries_collisions(self.player)
         self.background.switch_context(self.player)
@@ -44,29 +51,40 @@ class SinglePlayerGame:
 
 class SplitScreenGame:
     def __init__(self, respawn_center, respawn_tilt, num_of_players, screen, laps):
+        """Initialize a SplitScreenGame instance.
+
+        Args:
+            respawn_center (np.ndarray): The respawn center coordinates.
+            respawn_tilt (float): The respawn tilt angle.
+            num_of_players (int): The number of players.
+            screen (pygame.Surface): The screen to render the game.
+            laps (int): The number of laps for the game.
+        """
         self.screen = screen
         self.players = []
         if num_of_players == 2:
             self.players = [car_sprite.Car(WIDTH / 4, HEIGHT / 2,
-                                           ConfigData.get_attr('player1')['car_texture'], respawn_center+(500,0), respawn_tilt)]
+                                           ConfigData.get_attr('player1')['car_texture'], respawn_center + (500, 0), respawn_tilt)]
             self.players.append(car_sprite.Car(WIDTH / 4, HEIGHT / 2, ConfigData.get_attr('player2')['car_texture'],
-                                               respawn_center+np.array([400, -100]), respawn_tilt,
+                                               respawn_center + np.array([400, -100]), respawn_tilt,
                                                keys=ConfigData.get_attr('player2')['keys']))
         self.map = map_sprite.Map(players=self.players)
 
         self.player2subscreen = {
-            self.players[0]: screen.subsurface(0, 0, WIDTH//2, HEIGHT),
-            self.players[1]: screen.subsurface(WIDTH//2, 0, WIDTH//2, HEIGHT)
-            }
+            self.players[0]: screen.subsurface(0, 0, WIDTH // 2, HEIGHT),
+            self.players[1]: screen.subsurface(WIDTH // 2, 0, WIDTH // 2, HEIGHT)
+        }
         self.laps = laps
         self.winners = []
 
     def check_winners(self):
+        """Check if any player has completed the required number of laps and add them to the winners list."""
         for player in self.players:
             if len(player.time_of_laps_completion) == self.laps and player not in self.winners:
                 self.winners.append(player)
 
     def run(self):
+        """Run the game loop for split-screen mode."""
         self.screen.fill((0, 0, 0))
 
         for player in self.players:
@@ -74,18 +92,23 @@ class SplitScreenGame:
             self.map.draw(self.player2subscreen[player], player.delta_location)
             self.map.track_boundries_collisions(player)
             if player in self.winners:
-                self.blit_winner(player, self.winners.index(player)+1)
+                self.blit_winner(player, self.winners.index(player) + 1)
             else:
                 self.map.check_car_progress_on_map(player)
                 player.move()
-                # self.player.draw(screen)
         self.map.cars_collisions()
         self.map.perks_actions()
         self.check_winners()
 
     def blit_winner(self, player: car_sprite.Car, place: int):
+        """Display the winner's position on the screen.
+
+        Args:
+            player (car_sprite.Car): The player who has won.
+            place (int): The position of the player.
+        """
         s = self.player2subscreen[player]
-        font_size = int(200 + math.sin(globals.TICKS_PASSED/3) * 5)
+        font_size = int(200 + math.sin(globals.TICKS_PASSED / 3) * 5)
         font = pygame.font.SysFont(None, font_size)
         text = font.render(str(place) + 'place!', True, (255, 255, 255))
         text_rect = text.get_rect()
@@ -94,6 +117,7 @@ class SplitScreenGame:
 
 
 def start_game():
+    """Start the game based on the configuration settings."""
     pygame.init()
     pygame.display.set_caption("PWR CARS 2")
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -103,7 +127,8 @@ def start_game():
             game = SinglePlayerGame(np.array([1800., 900.]), 1.1, screen, ConfigData.get_attr('laps'))
         case 'Two Player':
             game = SplitScreenGame(np.array([1800., 900.]), 1.1, ConfigData.get_attr('num_of_players'), screen, ConfigData.get_attr('laps'))
-
+        case _:
+            raise ValueError('Wrong game mode selected')
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -114,22 +139,6 @@ def start_game():
         pygame.display.update()
         clock.tick(FRAME_RATE)
         globals.TICKS_PASSED += 1
-
-
-def draw_a_line(car: car_sprite.Car, screen):
-    # Calculate the end points of the line
-
-    length = 20
-    start_point = (40, 40)
-    angle_radians = car.rotation - math.pi/2
-    end_point = (start_point[0] + length * math.cos(angle_radians),
-                 start_point[1] + length * math.sin(angle_radians))
-
-    # Set the color of the line (RGB)
-    line_color = (255, 0, 0)
-
-    # Draw the line
-    pygame.draw.line(screen, line_color, start_point, end_point, 2)
 
 
 if __name__ == '__main__':
